@@ -2,7 +2,7 @@
   "name": "portafolio",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://tu-usuario.github.io/portafolio",
+  "homepage": "https://otin2.github.io/Portfolio",
   "dependencies": {
     "@emailjs/browser": "^4.4.1",
     "@react-three/fiber": "^9.1.4",
@@ -46,8 +46,5 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "devDependencies": {
-    "gh-pages": "^6.3.0"
   }
 }
