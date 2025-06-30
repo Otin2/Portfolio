@@ -23,7 +23,7 @@ const About = () => {
                     <div className="col-lg-6">
                         <div className="hero-image text-center mt-4 mt-lg-0">
                             <img
-                                src={`${process.env.PUBLIC_URL}/Imgs/foto.png`}
+                                src={`${process.env.PUBLIC_URL}/Imgs/Foto.png`}
                                 alt="Foto de perfil"
                                 style={{
                                     width: '100%',
