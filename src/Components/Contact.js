@@ -106,7 +106,7 @@ const Contact = () => {
                     <div className="contacto-info">
                         
                         <img
-                            src="/Imgs/Redes.png"
+                            src={`${process.env.PUBLIC_URL}/Imgs/Redes.png`}
                             alt="Redes Sociales"
                             className="redes-image"
                         />
