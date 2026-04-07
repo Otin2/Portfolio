@@ -62,8 +62,7 @@ export const LanguageProvider = ({ children }) => {
         },
         footer: {
             rights: 'Casi todos los derechos reservados.',
-            madeWith: 'Hecho con',
-            by: 'por'
+            credentials: 'Hecho por'
         }
         },
         en: {
@@ -120,8 +119,7 @@ export const LanguageProvider = ({ children }) => {
         },
         footer: {
             rights: 'Almost all rights reserved.',
-            madeWith: 'Made with',
-            by: 'by'
+            credentials: 'Made by'
         }
         }
     };

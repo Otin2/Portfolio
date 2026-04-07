@@ -17,7 +17,7 @@ const Footer = () => {
             </div>
             <div className="col-md-6 text-md-end">
                 <p className="mb-0">
-                {t.footer.madeWith} ❤️ {t.footer.by} Rolando
+                {t.footer.credentials} Rolando Roller Veliz
                 </p>
             </div>
             </div>
