@@ -24,8 +24,12 @@ export const LanguageProvider = ({ children }) => {
             contact: 'Descargar CV'
         },
         about: {
-            title: 'Acerca de mí',
-            description: 'Actualmente estudio Ingeniería de Sistemas de Información e International Business. Estoy en búsqueda de oportunidades laborales donde pueda aplicar mis conocimientos, seguir aprendiendo y crecer profesionalmente',
+        title: 'Acerca de mí',
+        description:
+            'Soy estudiante en tercio superior de Ingeniería de Sistemas de Información e International Business. ' +
+            'Soy un entusiasta de la tecnología y la programación, con especial interés en ciberseguridad, análisis de datos ' +
+            'y el desarrollo de aplicaciones. Estoy en búsqueda de oportunidades laborales donde pueda aplicar mis conocimientos, ' +
+            'seguir aprendiendo y crecer profesionalmente.',
         },
         skills: {
             title: 'Mis Habilidades',
@@ -78,8 +82,12 @@ export const LanguageProvider = ({ children }) => {
             contact: 'Download CV'
         },
         about: {
-            title: 'About me',
-            description: 'I am currently studying Information Systems Engineering and International Business. I’m looking for job opportunities where I can apply my knowledge, keep learning, and grow professionally.',
+        title: 'About me',
+        description:
+            'I am a top-third student in Information Systems Engineering and International Business. ' +
+            'I am passionate about technology and programming, with a particular interest in cybersecurity, data analysis, ' +
+            'and application development. I am seeking job opportunities where I can apply my knowledge, continue learning, ' +
+            'and grow professionally.',
         },
         skills: {
             title: 'My Skills',

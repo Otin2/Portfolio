@@ -5,7 +5,19 @@ import AnimatedSphere from './AnimatedSphere';
 
 const Header = () => {
     const { isDark } = useTheme();
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
+
+    // IDs de tus CV en Google Docs.
+    // Nota: por ahora ambos apuntan al mismo ID; si tienes documentos separados para ES/EN,
+    // reemplaza `es` y `en` por los IDs correctos.
+    const CV_DOC_IDS = {
+        es: '1hWCIDeC90vnP3yvOZEf_9--_ilg9MjNG',
+        en: '1hWCIDeC90vnP3yvOZEf_9--_ilg9MjNG',
+    };
+
+    const cvDocId = language === 'es' ? CV_DOC_IDS.es : CV_DOC_IDS.en;
+    const cvUrl = `https://docs.google.com/document/d/${cvDocId}/export?format=pdf`;
+    const cvFileName = language === 'es' ? 'CV-Rolando-Roller-ES.pdf' : 'CV-Rolando-Roller-EN.pdf';
 
     return (
         <section id="home" className={`min-vh-100 d-flex align-items-center ${isDark ? 'text-light' : 'text-dark'} header-section`} style={{ background: 'transparent' }}>        <div className="container-fluid">
@@ -30,9 +42,8 @@ const Header = () => {
                     </button>
                     <a
                     className="btn btn-outline-primary btn-lg"
-                    href="https://docs.google.com/document/d/1hWCIDeC90vnP3yvOZEf_9--_ilg9MjNG/edit"
-                    target="_blank"
-                    rel="noopener noreferrer"
+                        href={cvUrl}
+                        download={cvFileName}
                     >
                     {t.header.contact}
                     </a>
