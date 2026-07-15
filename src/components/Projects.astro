@@ -1,0 +1,74 @@
+---
+import { DATA } from '../data.js';
+---
+<section class="section" id="proyectos">
+  <div class="wrap">
+    <div class="reveal"><div class="eyebrow">04 · proyectos</div><h2 class="section-title">Proyectos <span class="g">personales</span></h2></div>
+    <div class="proj-grid reveal">
+      {DATA.projects.map((proj) => (
+        <div class="proj-card">
+          <div class="proj-head">
+            <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+            <span class="win">otin@dev: ~/proyectos</span>
+            <span class="proj-tag">{proj.tag}</span>
+          </div>
+          <div class="proj-body">
+            <div class="proj-cmd"><span class="pr"><span class="u">otin@dev</span>:~$</span> <span class="type" data-text={proj.cmd}></span></div>
+            <div class="proj-reveal">
+              <div class="proj-title">{proj.title}</div>
+              <div class="proj-desc">{proj.desc}</div>
+              <div class="proj-stack">
+                {proj.stack.map((tech) => <span>{tech}</span>)}
+              </div>
+              <a href={proj.link.href} class="proj-link">{proj.link.label}</a>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+<script>
+  // Tecleo letra por letra del comando cuando la tarjeta entra en el viewport
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function typeCard(cardBody) {
+    const span = cardBody.querySelector('.type');
+    const reveal = cardBody.querySelector('.proj-reveal');
+    const text = span.getAttribute('data-text');
+    if (reduced) {
+      span.textContent = text;
+      reveal.classList.add('show');
+      return;
+    }
+    let i = 0;
+    const cur = document.createElement('span');
+    cur.className = 'blink-cur';
+    span.after(cur);
+    const tick = () => {
+      if (i <= text.length) {
+        span.textContent = text.slice(0, i);
+        i++;
+        setTimeout(tick, 42);
+      } else {
+        cur.remove();
+        reveal.classList.add('show');
+      }
+    };
+    tick();
+  }
+
+  const typeIO = new IntersectionObserver(
+    (es) => {
+      es.forEach((e) => {
+        if (e.isIntersecting) {
+          typeCard(e.target);
+          typeIO.unobserve(e.target);
+        }
+      });
+    },
+    { threshold: 0.4 }
+  );
+  document.querySelectorAll('.proj-body').forEach((el) => typeIO.observe(el));
+</script>

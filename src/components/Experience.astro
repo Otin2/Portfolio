@@ -1,0 +1,18 @@
+---
+import { DATA } from '../data.js';
+---
+<section class="section" id="experiencia">
+  <div class="wrap">
+    <div class="reveal"><div class="eyebrow">03 · experiencia</div><h2 class="section-title">Trayectoria &amp; <span class="g">experiencia</span></h2></div>
+    <div class="timeline reveal">
+      {DATA.experience.map((item) => (
+        <div class="tl-item">
+          <div class="tl-date">{item.date}</div>
+          <div class="tl-role">{item.role}</div>
+          <div class="tl-org">{item.org}</div>
+          <div class="tl-desc">{item.desc}</div>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>

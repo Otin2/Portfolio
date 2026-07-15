@@ -1,0 +1,29 @@
+---
+import { DATA } from '../data.js';
+const { profile } = DATA.about;
+const entries = Object.entries(profile);
+---
+<section class="section" id="sobre-mi">
+  <div class="wrap">
+    <div class="reveal"><div class="eyebrow">01 · whoami</div><h2 class="section-title">Sobre <span class="g">mí</span></h2></div>
+    <div class="about-grid reveal">
+      <div class="about-text">
+        <p>Soy estudiante de doble grado en <strong>Ingeniería de Sistemas</strong> y Negocios Internacionales en la USIL. Me apasiona la <span class="hl">ciberseguridad</span> y el desarrollo de tecnología: entender los sistemas por dentro para construirlos mejor y protegerlos.</p>
+        <p>Mi trabajo se apoya en tres pilares: <span class="hl">seguridad</span>, <span class="hl">desarrollo de software</span> e <span class="hl">inteligencia artificial y datos</span>. Mi tesis aplica machine learning para clasificar jugadores de tenis amateur en Lima — datos reales, modelo real, un problema que conozco de cerca.</p>
+        <p>Aprendo rápido, trabajo de forma práctica y estructurada, y llevo lo que estudio a proyectos concretos de inmediato.</p>
+      </div>
+      <div class="term-card">
+        <div class="term-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="title">otin@dev: ~/profile</span></div>
+        <div class="term-body">
+          <div class="line"><span class="pr">$</span> whoami --json</div>
+          <div class="out">{'{'}</div>
+          {entries.map(([key, value], i) => (
+            <div class="out">&nbsp;&nbsp;<span class="k">"{key}"</span>: <span class="v">"{value}"</span>{i < entries.length - 1 ? ',' : ''}</div>
+          ))}
+          <div class="out">{'}'}</div>
+          <div class="line"><span class="pr">$</span> <span class="cursor"></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

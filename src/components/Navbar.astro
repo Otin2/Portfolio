@@ -1,0 +1,33 @@
+---
+import { DATA } from '../data.js';
+---
+<nav class="nav" id="nav">
+  <div class="nav-inner">
+    <a href="#inicio" class="nav-logo">{DATA.logo.user}<span class="p">.</span>{DATA.logo.tld}<span class="c">_</span></a>
+    <div class="nav-links" id="navlinks">
+      {DATA.nav.map((item) => (
+        <a href={item.href}><span class="n">{item.num}</span>{item.label}</a>
+      ))}
+      <a href="#contacto" class="nav-cta">Contacto</a>
+    </div>
+    <button class="nav-burger" id="burger" aria-label="Abrir menú">☰</button>
+  </div>
+</nav>
+
+<script>
+  const nav = document.getElementById('nav');
+  window.addEventListener('scroll', () => {
+    nav.classList.toggle('scrolled', window.scrollY > 40);
+  });
+
+  const burger = document.getElementById('burger');
+  const links = document.getElementById('navlinks');
+  burger.addEventListener('click', () => {
+    const open = links.classList.toggle('open');
+    burger.textContent = open ? '✕' : '☰';
+  });
+  links.addEventListener('click', () => {
+    links.classList.remove('open');
+    burger.textContent = '☰';
+  });
+</script>

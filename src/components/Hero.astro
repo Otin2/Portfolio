@@ -1,0 +1,19 @@
+---
+import { DATA } from '../data.js';
+const { hero } = DATA;
+---
+<header class="hero" id="inicio">
+  <div class="hero-bg"><div class="grid"></div><div class="orb orb1"></div><div class="orb orb2"></div></div>
+  <div class="wrap hero-inner">
+    <div class="hero-badge"><span class="pulse"></span> {hero.badge}</div>
+    <h1>{hero.titleStart}<span class="g">{hero.titleGradient}</span>.</h1>
+    <p class="hero-sub">{hero.subtitle}</p>
+    <div class="hero-tags">
+      {hero.tags.map((tag) => <span>{tag}</span>)}
+    </div>
+    <div class="hero-actions">
+      <a href={hero.ctaPrimary.href} class="btn btn-primary">{hero.ctaPrimary.label}</a>
+      <a href={hero.ctaGhost.href} class="btn btn-ghost">{hero.ctaGhost.label}</a>
+    </div>
+  </div>
+</header>

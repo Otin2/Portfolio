@@ -1,0 +1,18 @@
+---
+import { DATA } from '../data.js';
+const { contact } = DATA;
+---
+<section class="section contact" id="contacto">
+  <div class="wrap">
+    <div class="reveal">
+      <div class="eyebrow">05 · contacto</div>
+      <h2 class="section-title">Hablemos de <span class="g">tecnología</span>.</h2>
+      <p class="contact-lead">¿Un proyecto, una oportunidad en seguridad, desarrollo o IA, o solo hablar de tech? El canal está abierto.</p>
+      <div class="contact-links">
+        <a href={`mailto:${contact.email}`} class="btn btn-primary">✉ {contact.email}</a>
+        <a href={contact.linkedin} class="btn btn-ghost">LinkedIn</a>
+        <a href={contact.github} class="btn btn-ghost">GitHub</a>
+      </div>
+    </div>
+  </div>
+</section>

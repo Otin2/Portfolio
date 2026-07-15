@@ -1,0 +1,20 @@
+---
+import { DATA } from '../data.js';
+---
+<section class="section" id="skills">
+  <div class="wrap">
+    <div class="reveal"><div class="eyebrow">02 · skills</div><h2 class="section-title">Stack <span class="g">técnico</span></h2></div>
+    <div class="skills-grid reveal">
+      {DATA.skills.map((cat) => (
+        <div class="skill-cat">
+          {cat.rank && <span class="rank">{cat.rank}</span>}
+          <div class="idx">{cat.idx}</div>
+          <h3>{cat.title}</h3>
+          <div class="chips">
+            {cat.chips.map((chip) => <span class="chip">{chip}</span>)}
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
