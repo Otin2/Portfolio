@@ -1,21 +1,28 @@
 ---
-import Layout from '../layouts/Layout.astro';
-import Navbar from '../components/Navbar.astro';
-import Hero from '../components/Hero.astro';
-import About from '../components/About.astro';
-import Skills from '../components/Skills.astro';
-import Experience from '../components/Experience.astro';
-import Projects from '../components/Projects.astro';
-import Contact from '../components/Contact.astro';
-import Footer from '../components/Footer.astro';
+import { translations, defaultLang } from '../data.js'
+import Layout from '../layouts/Layout.astro'
+import Navbar from '../components/Navbar.astro'
+import Hero from '../components/Hero.astro'
+import About from '../components/About.astro'
+import Skills from '../components/Skills.astro'
+import Experience from '../components/Experience.astro'
+import Projects from '../components/Projects.astro'
+import Contact from '../components/Contact.astro'
+import Footer from '../components/Footer.astro'
+
+const t = translations[defaultLang]
 ---
+
 <Layout>
+  <a class="skip-link" href="#contenido" data-i18n="ui.skip">{t.ui.skip}</a>
   <Navbar />
-  <Hero />
-  <About />
-  <Skills />
-  <Experience />
-  <Projects />
-  <Contact />
+  <main id="contenido">
+    <Hero />
+    <About />
+    <Skills />
+    <Experience />
+    <Projects />
+    <Contact />
+  </main>
   <Footer />
 </Layout>

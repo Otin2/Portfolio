@@ -1,18 +1,42 @@
 ---
-import { DATA } from '../data.js';
+import { translations, defaultLang } from '../data.js'
+
+const { experience } = translations[defaultLang]
+
+// Experiencia en dos columnas
+const half = Math.ceil(experience.items.length / 2)
+const columns = [experience.items.slice(0, half), experience.items.slice(half)]
 ---
-<section class="section" id="experiencia">
-  <div class="wrap">
-    <div class="reveal"><div class="eyebrow">03 · experiencia</div><h2 class="section-title">Trayectoria &amp; <span class="g">experiencia</span></h2></div>
-    <div class="timeline reveal">
-      {DATA.experience.map((item) => (
-        <div class="tl-item">
-          <div class="tl-date">{item.date}</div>
-          <div class="tl-role">{item.role}</div>
-          <div class="tl-org">{item.org}</div>
-          <div class="tl-desc">{item.desc}</div>
-        </div>
-      ))}
+
+<section id="experiencia" class="section reveal">
+  <div class="container">
+    <h2 class="section__title">
+      <span class="section__num">03.</span>
+      <span data-i18n="experience.heading">{experience.heading}</span>
+    </h2>
+
+    <div class="timeline-grid">
+      {
+        columns.map((column, c) => (
+          <ol class={`timeline${c === 0 ? ' timeline--current' : ''}`}>
+            {column.map((item, i) => {
+              // Indice global del item para el idioma
+              const gi = c * half + i
+              return (
+                <li class="timeline__item">
+                  <span class="timeline__dot" aria-hidden="true" />
+                  <p class="timeline__period" data-i18n={`experience.items.${gi}.period`}>{item.period}</p>
+                  <h3 class="timeline__title" data-i18n={`experience.items.${gi}.title`}>{item.title}</h3>
+                  <p class="timeline__org" data-i18n={`experience.items.${gi}.org`}>{item.org}</p>
+                  <p class="timeline__description" data-i18n={`experience.items.${gi}.description`}>
+                    {item.description}
+                  </p>
+                </li>
+              )
+            })}
+          </ol>
+        ))
+      }
     </div>
   </div>
 </section>

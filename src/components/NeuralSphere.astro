@@ -1,0 +1,697 @@
+{/* Esfera neuronal tridimensional que rota respira se repele del cursor y muta entre figuras */}
+<div class="neural" aria-hidden="true">
+  <canvas class="neural__canvas" style="opacity: 0"></canvas>
+</div>
+
+<script>
+  import * as THREE from 'three'
+
+  const CONFIG = {
+    PARTICLE_COUNT: 1200,
+    PARTICLE_SIZE: 0.62,
+    ROTATION_SPEED: 0.0016,
+    PULSE_AMOUNT: 0.025,
+    PULSE_SPEED: 0.8,
+    LINK_DISTANCE: 1.95,
+    LINK_MIN_DISTANCE: 0.5,
+    LINK_OPACITY: 0.42,
+    LINK_BOLD_OPACITY: 1.0,
+    LINK_STRETCH_BREAK: 2.2,
+    MAX_LINKS_PER_PARTICLE: 6,
+    MAX_LINKS_TOTAL: 3200,
+    REPEL_RADIUS: 3.4,
+    REPEL_STRENGTH: 0.6,
+    EASE_HOME: 0.018,
+    TILT_AMOUNT: 0,
+    DRAG_SENSITIVITY: 0.006,
+    DRAG_DAMPING: 0.945,
+    GOLD_RATIO: 0.08,
+    GOLD_BOOST: 1.3,
+    GOLD_SIZE: 1.45,
+  }
+
+  const isMobile = window.matchMedia('(max-width: 720px)').matches
+  if (isMobile) {
+    Object.assign(CONFIG, {
+      PARTICLE_COUNT: 550,
+      MAX_LINKS_TOTAL: 1400,
+      MAX_LINKS_PER_PARTICLE: 5,
+      LINK_DISTANCE: 2.3,
+    })
+  }
+
+  const wrapper = document.querySelector('.neural')
+  const canvas = document.querySelector('.neural__canvas')
+
+  if (wrapper && canvas) {
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    let initialized = false
+
+    const cssColor = (name) => {
+      const raw = getComputedStyle(document.documentElement).getPropertyValue(name).trim()
+      return new THREE.Color(raw || '#0d6efd')
+    }
+
+    const init = () => {
+      initialized = true
+
+      const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true })
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2))
+
+      const scene = new THREE.Scene()
+      const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100)
+      camera.position.z = 26
+
+      const pivot = new THREE.Group()
+      const group = new THREE.Group()
+      pivot.add(group)
+      scene.add(pivot)
+
+      const N = CONFIG.PARTICLE_COUNT
+      const pos = new Float32Array(N * 3)
+      const home = new Float32Array(N * 3)
+
+      const easeJitter = new Float32Array(N)
+      for (let i = 0; i < N; i++) easeJitter[i] = 0.5 + Math.random()
+
+      const GOLD_START = Math.floor(N * 0.72)
+
+      const perm = new Uint16Array(N)
+      for (let i = 0; i < N; i++) perm[i] = i
+      for (let i = N - 1; i > 0; i--) {
+        const r = Math.floor(Math.random() * (i + 1))
+        const tmp = perm[i]
+        perm[i] = perm[r]
+        perm[r] = tmp
+      }
+
+
+      // Esfera de particulas
+      const sphereShape = {
+        extra: null,
+        plexusCount: null,
+        linkOpacity: null,
+        particleOpacity: null,
+        lockRotX: false,
+        rotationSpeed: null,
+        fill(out) {
+          const golden = Math.PI * (3 - Math.sqrt(5))
+          for (let i = 0; i < N; i++) {
+            const fi = perm[i]
+            const y = 1 - (fi / (N - 1)) * 2
+            const rXZ = Math.sqrt(1 - y * y)
+            const theta = golden * fi
+            const r = 8.6 * (0.9 + Math.random() * 0.2)
+            out[i * 3] = Math.cos(theta) * rXZ * r
+            out[i * 3 + 1] = y * r
+            out[i * 3 + 2] = Math.sin(theta) * rXZ * r
+          }
+        },
+      }
+
+      // ADN
+      const dnaShape = {
+        extra: [],
+        plexusCount: 0,
+        linkOpacity: 0.32,
+        particleOpacity: 0.85,
+        lockRotX: true,
+        rotationSpeed: 0.0038,
+        fill(out) {
+          const H = 17
+          const R = 4.2
+          const TWIST = 0.55
+          const RUNGS = 16
+          this.extra = []
+          const strandCount = GOLD_START
+          this.plexusCount = strandCount
+          for (let i = 0; i < strandCount; i++) {
+            const t = Math.random() * H - H / 2
+            const side = Math.random() < 0.5 ? 0 : Math.PI
+            const a = t * TWIST + side
+            out[i * 3] = Math.cos(a) * R + (Math.random() - 0.5) * 0.7
+            out[i * 3 + 1] = t + (Math.random() - 0.5) * 0.7
+            out[i * 3 + 2] = Math.sin(a) * R + (Math.random() - 0.5) * 0.7
+          }
+          const rungPts = Math.floor((N - strandCount) / RUNGS)
+          let i = strandCount
+          for (let r = 0; r < RUNGS; r++) {
+            const t = (r / (RUNGS - 1)) * (H - 1) - (H - 1) / 2
+            const a = t * TWIST
+            const x1 = Math.cos(a) * R
+            const z1 = Math.sin(a) * R
+            for (let k = 0; k < rungPts && i < N; k++, i++) {
+              const mix = k / (rungPts - 1)
+              out[i * 3] = x1 - mix * 2 * x1 + (Math.random() - 0.5) * 0.16
+              out[i * 3 + 1] = t + (Math.random() - 0.5) * 0.16
+              out[i * 3 + 2] = z1 - mix * 2 * z1 + (Math.random() - 0.5) * 0.16
+              if (k > 0) this.extra.push(i - 1, i)
+            }
+          }
+          for (; i < N; i++) {
+            const t = Math.random() * H - H / 2
+            const a = t * TWIST + (Math.random() < 0.5 ? 0 : Math.PI)
+            out[i * 3] = Math.cos(a) * R + (Math.random() - 0.5) * 0.7
+            out[i * 3 + 1] = t + (Math.random() - 0.5) * 0.7
+            out[i * 3 + 2] = Math.sin(a) * R + (Math.random() - 0.5) * 0.7
+          }
+        },
+      }
+
+      // Atomo
+      const atomShape = {
+        extra: [],
+        plexusCount: GOLD_START,
+        linkOpacity: 0.3,
+        particleOpacity: 0.8,
+        rotationSpeed: 0.0025,
+        fill(out) {
+          this.extra = []
+          const CORE = 620
+          const spherical = (i, r) => {
+            const th = Math.random() * Math.PI * 2
+            const ph = Math.acos(2 * Math.random() - 1)
+            out[i * 3] = r * Math.sin(ph) * Math.cos(th)
+            out[i * 3 + 1] = r * Math.cos(ph)
+            out[i * 3 + 2] = r * Math.sin(ph) * Math.sin(th)
+          }
+          for (let i = 0; i < CORE; i++) spherical(i, 2.3 * Math.cbrt(Math.random()))
+          for (let i = CORE; i < GOLD_START; i++) spherical(i, 3.6 + Math.random() * 1.2)
+          const OUT_TILT = 1.05
+          const RAILS = [0.92, 1.08]
+          const perRail = Math.floor((N - GOLD_START) / (3 * RAILS.length))
+          let i = GOLD_START
+          for (let ring = 0; ring < 3; ring++) {
+            const rot = ring * (Math.PI / 3)
+            const tilt = ring % 2 === 0 ? OUT_TILT : -OUT_TILT
+            RAILS.forEach((scale, ri) => {
+              const last = ring === 2 && ri === RAILS.length - 1
+              const count = last ? N - i : perRail
+              const first = i
+              for (let k = 0; k < count; k++, i++) {
+                const a = (k / count) * Math.PI * 2
+                const ex = Math.cos(a) * 8.2 * scale
+                const ey = Math.sin(a) * 3.1 * scale
+                const j = 0.18
+                out[i * 3] = ex * Math.cos(rot) - ey * Math.cos(tilt) * Math.sin(rot) + (Math.random() - 0.5) * j
+                out[i * 3 + 1] = ex * Math.sin(rot) + ey * Math.cos(tilt) * Math.cos(rot) + (Math.random() - 0.5) * j
+                out[i * 3 + 2] = ey * Math.sin(tilt) + (Math.random() - 0.5) * j
+                if (k > 0) this.extra.push(i - 1, i)
+              }
+              this.extra.push(i - 1, first)
+            })
+          }
+        },
+      }
+
+      // Candado
+      const padlockShape = {
+        extra: [],
+        plexusCount: GOLD_START,
+        lockRotX: true,
+        rotationSpeed: 0.0015,
+        fill(out) {
+          this.extra = []
+          const W = 4
+          const TOP = 0.4
+          const BOT = -6
+          const D = 1.5
+          for (let i = 0; i < GOLD_START; i++) {
+            const face = Math.random()
+            let x, y, z
+            if (face < 0.62) {
+              x = (Math.random() - 0.5) * 2 * W
+              y = BOT + Math.random() * (TOP - BOT)
+              z = Math.random() < 0.5 ? D : -D
+            } else if (face < 0.81) {
+              x = (Math.random() - 0.5) * 2 * W
+              y = Math.random() < 0.5 ? TOP : BOT
+              z = (Math.random() - 0.5) * 2 * D
+            } else {
+              x = Math.random() < 0.5 ? W : -W
+              y = BOT + Math.random() * (TOP - BOT)
+              z = (Math.random() - 0.5) * 2 * D
+            }
+            out[i * 3] = x + (Math.random() - 0.5) * 0.12
+            out[i * 3 + 1] = y + (Math.random() - 0.5) * 0.12
+            out[i * 3 + 2] = z + (Math.random() - 0.5) * 0.12
+          }
+          let i = GOLD_START
+          const RAILS = [2.6, 3.2]
+          const LEG_TOP = 0.4
+          const LEG_BOT = -0.4
+          RAILS.forEach((R) => {
+            const count = 100
+            for (let k = 0; k < count; k++, i++) {
+              const f = k / (count - 1)
+              let x, y
+              if (f < 0.12) {
+                x = -R
+                y = LEG_BOT + (f / 0.12) * (LEG_TOP - LEG_BOT)
+              } else if (f > 0.88) {
+                x = R
+                y = LEG_TOP - ((f - 0.88) / 0.12) * (LEG_TOP - LEG_BOT)
+              } else {
+                const a = Math.PI * (1 - (f - 0.12) / 0.76)
+                x = Math.cos(a) * R
+                y = LEG_TOP + Math.sin(a) * R
+              }
+              out[i * 3] = x + (Math.random() - 0.5) * 0.12
+              out[i * 3 + 1] = y + (Math.random() - 0.5) * 0.12
+              out[i * 3 + 2] = (Math.random() - 0.5) * 0.25
+              if (k > 0) this.extra.push(i - 1, i)
+            }
+          })
+          const keyFirst = i
+          const KEY_Z = 1.6
+          const CIRC = Math.floor((N - i) * 0.7)
+          for (let k = 0; k < CIRC; k++, i++) {
+            const a = (k / CIRC) * Math.PI * 2
+            out[i * 3] = Math.cos(a) * 0.9 + (Math.random() - 0.5) * 0.1
+            out[i * 3 + 1] = -2.3 + Math.sin(a) * 0.9 + (Math.random() - 0.5) * 0.1
+            out[i * 3 + 2] = KEY_Z + (Math.random() - 0.5) * 0.15
+            if (k > 0) this.extra.push(i - 1, i)
+          }
+          this.extra.push(i - 1, keyFirst)
+          const slotFirst = i
+          for (let k = 0; i < N; k++, i++) {
+            const f = k / Math.max(N - slotFirst - 1, 1)
+            out[i * 3] = (Math.random() - 0.5) * 0.25
+            out[i * 3 + 1] = -3.2 - f * 1.4 + (Math.random() - 0.5) * 0.1
+            out[i * 3 + 2] = KEY_Z + (Math.random() - 0.5) * 0.15
+            if (k > 0) this.extra.push(i - 1, i)
+          }
+        },
+      }
+
+      // Teserac
+      const cubeShape = {
+        extra: [],
+        plexusCount: GOLD_START,
+        linkMinDistance: 0.12,
+        linkOpacity: 0.75,
+        rotationSpeed: 0.002,
+        fill(out) {
+          this.extra = []
+          const cornersOf = (h) => {
+            const c = []
+            for (let cx = -1; cx <= 1; cx += 2)
+              for (let cy = -1; cy <= 1; cy += 2)
+                for (let cz = -1; cz <= 1; cz += 2) c.push([cx * h, cy * h, cz * h])
+            return c
+          }
+          const edgesOf = (corners) => {
+            const e = []
+            for (let a = 0; a < corners.length; a++)
+              for (let b = a + 1; b < corners.length; b++) {
+                let diff = 0
+                for (let d = 0; d < 3; d++) if (corners[a][d] !== corners[b][d]) diff++
+                if (diff === 1) e.push([corners[a], corners[b]])
+              }
+            return e
+          }
+          const outer = cornersOf(4.6)
+          const inner = cornersOf(2.3)
+          const cyanEdges = [...edgesOf(outer), ...edgesOf(inner)]
+          const perEdge = Math.floor(GOLD_START / cyanEdges.length)
+          let i = 0
+          cyanEdges.forEach(([a, b], eIdx) => {
+            const count = eIdx === cyanEdges.length - 1 ? GOLD_START - i : perEdge
+            for (let k = 0; k < count && i < GOLD_START; k++, i++) {
+              const mix = k / Math.max(count - 1, 1)
+              for (let d = 0; d < 3; d++) {
+                out[i * 3 + d] = a[d] + (b[d] - a[d]) * mix + (Math.random() - 0.5) * 0.42
+              }
+            }
+          })
+          let vi = GOLD_START
+          const perConn = Math.floor((N - GOLD_START) / outer.length)
+          outer.forEach((a, ci) => {
+            const b = inner[ci]
+            const count = ci === outer.length - 1 ? N - vi : perConn
+            for (let k = 0; k < count && vi < N; k++, vi++) {
+              const mix = k / Math.max(count - 1, 1)
+              for (let d = 0; d < 3; d++) {
+                out[vi * 3 + d] = a[d] + (b[d] - a[d]) * mix + (Math.random() - 0.5) * 0.32
+              }
+              if (k > 0) this.extra.push(vi - 1, vi)
+            }
+          })
+        },
+      }
+
+      const SHAPES = [sphereShape, padlockShape, cubeShape, atomShape, dnaShape]
+      let shapeIndex = 0
+      SHAPES[0].fill(home)
+      pos.set(home)
+
+      const makeSprite = () => {
+        const c = document.createElement('canvas')
+        c.width = c.height = 64
+        const ctx = c.getContext('2d')
+        const g = ctx.createRadialGradient(32, 32, 0, 32, 32, 32)
+        g.addColorStop(0, 'rgba(255,255,255,1)')
+        g.addColorStop(0.35, 'rgba(255,255,255,0.6)')
+        g.addColorStop(1, 'rgba(255,255,255,0)')
+        ctx.fillStyle = g
+        ctx.fillRect(0, 0, 64, 64)
+        return new THREE.CanvasTexture(c)
+      }
+
+      const colors = new Float32Array(N * 3)
+      const paintColors = () => {
+        const cyan = cssColor('--sphere-a')
+        const sky = cssColor('--sphere-b')
+        const goldAccent = cssColor('--sphere-gold')
+        const gold = new THREE.Color('#f5e6c4')
+        const tmp = new THREE.Color()
+        for (let i = 0; i < N; i++) {
+          if (i >= GOLD_START) {
+            tmp.copy(goldAccent).multiplyScalar(CONFIG.GOLD_BOOST)
+          } else {
+            const roll = Math.random()
+            if (roll < CONFIG.GOLD_RATIO) tmp.copy(gold).multiplyScalar(1.2)
+            else if (roll < 0.62) tmp.copy(cyan)
+            else tmp.copy(sky)
+          }
+          colors[i * 3] = tmp.r
+          colors[i * 3 + 1] = tmp.g
+          colors[i * 3 + 2] = tmp.b
+        }
+      }
+      paintColors()
+
+      const sprite = makeSprite()
+      const posAttr = new THREE.BufferAttribute(pos, 3)
+      const colAttr = new THREE.BufferAttribute(colors, 3)
+
+      const pGeo = new THREE.BufferGeometry()
+      pGeo.setAttribute('position', posAttr)
+      pGeo.setAttribute('color', colAttr)
+      pGeo.setDrawRange(0, GOLD_START)
+      const pMat = new THREE.PointsMaterial({
+        size: CONFIG.PARTICLE_SIZE,
+        map: sprite,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.95,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+      })
+      group.add(new THREE.Points(pGeo, pMat))
+
+      const vGeo = new THREE.BufferGeometry()
+      vGeo.setAttribute('position', posAttr)
+      vGeo.setAttribute('color', colAttr)
+      vGeo.setDrawRange(GOLD_START, N - GOLD_START)
+      const vMat = new THREE.PointsMaterial({
+        size: CONFIG.PARTICLE_SIZE * CONFIG.GOLD_SIZE,
+        map: sprite,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.95,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+      })
+      group.add(new THREE.Points(vGeo, vMat))
+
+      const linePos = new Float32Array(CONFIG.MAX_LINKS_TOTAL * 6)
+      const lGeo = new THREE.BufferGeometry()
+      lGeo.setAttribute('position', new THREE.BufferAttribute(linePos, 3))
+      const lMat = new THREE.LineBasicMaterial({
+        color: cssColor('--sphere-b'),
+        transparent: true,
+        opacity: 0,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+      })
+      group.add(new THREE.LineSegments(lGeo, lMat))
+
+      const boldPos = new Float32Array(1000 * 6)
+      const bGeo = new THREE.BufferGeometry()
+      bGeo.setAttribute('position', new THREE.BufferAttribute(boldPos, 3))
+      const bMat = new THREE.LineBasicMaterial({
+        color: cssColor('--sphere-gold').multiplyScalar(1.2),
+        transparent: true,
+        opacity: 0,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+      })
+      group.add(new THREE.LineSegments(bGeo, bMat))
+      for (const off of [0.06, -0.06, 0.13, -0.13]) {
+        const copy = new THREE.LineSegments(bGeo, bMat)
+        copy.position.set(off, off, 0)
+        group.add(copy)
+      }
+
+      let links = []
+      let boldLinks = []
+
+      const order = new Uint16Array(N)
+      const rebuildLinks = (shape) => {
+        links = []
+        boldLinks = shape.extra ? shape.extra.slice(0, (boldPos.length / 6) * 2) : []
+        bGeo.setDrawRange(0, boldLinks.length)
+        const plexusN = shape.plexusCount ?? N
+        const per = new Uint8Array(N)
+        const maxD2 = CONFIG.LINK_DISTANCE * CONFIG.LINK_DISTANCE
+        const minD2 = (shape.linkMinDistance ?? CONFIG.LINK_MIN_DISTANCE) ** 2
+        for (let i = 0; i < N; i++) order[i] = i
+        for (let i = N - 1; i > 0; i--) {
+          const r = Math.floor(Math.random() * (i + 1))
+          const tmp = order[i]
+          order[i] = order[r]
+          order[r] = tmp
+        }
+        outer: for (let oi = 0; oi < N; oi++) {
+          const i = order[oi]
+          if (i >= plexusN || per[i] >= CONFIG.MAX_LINKS_PER_PARTICLE) continue
+          for (let oj = oi + 1; oj < N; oj++) {
+            const j = order[oj]
+            if (j >= plexusN || per[j] >= CONFIG.MAX_LINKS_PER_PARTICLE) continue
+            const dx = home[i * 3] - home[j * 3]
+            const dy = home[i * 3 + 1] - home[j * 3 + 1]
+            const dz = home[i * 3 + 2] - home[j * 3 + 2]
+            const d2 = dx * dx + dy * dy + dz * dz
+            if (d2 < maxD2 && d2 > minD2) {
+              links.push(i, j)
+              per[i]++
+              per[j]++
+              if (links.length >= CONFIG.MAX_LINKS_TOTAL * 2) break outer
+              if (per[i] >= CONFIG.MAX_LINKS_PER_PARTICLE) break
+            }
+          }
+        }
+        lGeo.setDrawRange(0, links.length)
+      }
+      rebuildLinks(SHAPES[0])
+
+      const raycaster = new THREE.Raycaster()
+      const ndc = new THREE.Vector2()
+      const rayO = new THREE.Vector3()
+      const rayP = new THREE.Vector3()
+      const rayD = new THREE.Vector3()
+      let mouseActive = false
+      let tiltX = 0
+      let tiltY = 0
+
+      let userRotX = 0
+      let userRotY = 0
+      let spinX = 0
+      let spinY = 0
+      let dragging = false
+      let dragDist = 0
+      let lastX = 0
+      let lastY = 0
+
+      canvas.addEventListener('pointerdown', (e) => {
+        dragging = true
+        dragDist = 0
+        lastX = e.clientX
+        lastY = e.clientY
+        canvas.setPointerCapture(e.pointerId)
+      })
+
+      canvas.addEventListener('pointermove', (e) => {
+        const rect = canvas.getBoundingClientRect()
+        ndc.x = ((e.clientX - rect.left) / rect.width) * 2 - 1
+        ndc.y = -(((e.clientY - rect.top) / rect.height) * 2 - 1)
+        mouseActive = true
+        tiltX = ndc.y * -CONFIG.TILT_AMOUNT
+        tiltY = ndc.x * CONFIG.TILT_AMOUNT
+        if (dragging) {
+          const dx = e.clientX - lastX
+          const dy = e.clientY - lastY
+          lastX = e.clientX
+          lastY = e.clientY
+          dragDist += Math.abs(dx) + Math.abs(dy)
+          userRotY += dx * CONFIG.DRAG_SENSITIVITY
+          spinY = dx * CONFIG.DRAG_SENSITIVITY
+          if (!SHAPES[shapeIndex].lockRotX) {
+            userRotX += dy * CONFIG.DRAG_SENSITIVITY
+            spinX = dy * CONFIG.DRAG_SENSITIVITY
+          }
+        }
+      })
+
+      const endDrag = () => {
+        dragging = false
+      }
+      canvas.addEventListener('pointerup', endDrag)
+      canvas.addEventListener('pointercancel', endDrag)
+      canvas.addEventListener('pointerleave', () => {
+        mouseActive = false
+        tiltX = 0
+        tiltY = 0
+        endDrag()
+      })
+
+      // Un click cambia de figura
+      canvas.addEventListener('click', () => {
+        if (dragDist > 5) return
+        shapeIndex = (shapeIndex + 1) % SHAPES.length
+        SHAPES[shapeIndex].fill(home)
+        rebuildLinks(SHAPES[shapeIndex])
+      })
+
+      new MutationObserver(() => {
+        paintColors()
+        pGeo.attributes.color.needsUpdate = true
+        lMat.color = cssColor('--sphere-b')
+        bMat.color = cssColor('--sphere-gold').multiplyScalar(1.2)
+      }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
+
+      const resize = () => {
+        const w = wrapper.clientWidth
+        const h = wrapper.clientHeight
+        if (!w || !h) return
+        renderer.setSize(w, h, false)
+        camera.aspect = w / h
+        camera.updateProjectionMatrix()
+      }
+      new ResizeObserver(resize).observe(wrapper)
+      resize()
+
+      let running = false
+      let rafId = 0
+      let t = 0
+
+      const frame = () => {
+        rafId = requestAnimationFrame(frame)
+        t += 0.016
+
+        const autoSpeed = SHAPES[shapeIndex].rotationSpeed ?? CONFIG.ROTATION_SPEED
+        userRotY += (reduced ? 0 : autoSpeed) + (dragging ? 0 : spinY)
+        userRotX += dragging ? 0 : spinX
+        spinX *= CONFIG.DRAG_DAMPING
+        spinY *= CONFIG.DRAG_DAMPING
+        if (SHAPES[shapeIndex].lockRotX) {
+          spinX = 0
+          userRotX *= 0.94
+        }
+        group.rotation.y = userRotY
+        group.rotation.x = userRotX + (reduced ? 0 : Math.sin(t * 0.3) * 0.08)
+        if (!reduced) {
+          const s = 1 + Math.sin(t * CONFIG.PULSE_SPEED) * CONFIG.PULSE_AMOUNT
+          group.scale.setScalar(s)
+        }
+        pivot.rotation.x += (tiltX - pivot.rotation.x) * 0.05
+        pivot.rotation.y += (tiltY - pivot.rotation.y) * 0.05
+        pivot.updateMatrixWorld()
+
+        // El rayo del cursor pasa en una dimension pero su repulsion es 3d repeliendo las particulas que no estan en su misma dimension
+        let repel = false
+        if (mouseActive) {
+          raycaster.setFromCamera(ndc, camera)
+          rayO.copy(raycaster.ray.origin)
+          rayP.copy(raycaster.ray.origin).add(raycaster.ray.direction)
+          group.worldToLocal(rayO)
+          group.worldToLocal(rayP)
+          rayD.copy(rayP).sub(rayO).normalize()
+          repel = true
+        }
+
+        const R2 = CONFIG.REPEL_RADIUS * CONFIG.REPEL_RADIUS
+        for (let i = 0; i < N; i++) {
+          const ix = i * 3
+          const ease = CONFIG.EASE_HOME * easeJitter[i]
+          pos[ix] += (home[ix] - pos[ix]) * ease
+          pos[ix + 1] += (home[ix + 1] - pos[ix + 1]) * ease
+          pos[ix + 2] += (home[ix + 2] - pos[ix + 2]) * ease
+          if (repel) {
+            const vx = pos[ix] - rayO.x
+            const vy = pos[ix + 1] - rayO.y
+            const vz = pos[ix + 2] - rayO.z
+            const proj = vx * rayD.x + vy * rayD.y + vz * rayD.z
+            const dx = vx - rayD.x * proj
+            const dy = vy - rayD.y * proj
+            const dz = vz - rayD.z * proj
+            const d2 = dx * dx + dy * dy + dz * dz
+            if (d2 < R2 && d2 > 0.0001) {
+              const d = Math.sqrt(d2)
+              const f = ((1 - d / CONFIG.REPEL_RADIUS) ** 2 * CONFIG.REPEL_STRENGTH) / d
+              pos[ix] += dx * f
+              pos[ix + 1] += dy * f
+              pos[ix + 2] += dz * f
+            }
+          }
+        }
+        pGeo.attributes.position.needsUpdate = true
+
+        const breakD2 = (CONFIG.LINK_DISTANCE * CONFIG.LINK_STRETCH_BREAK) ** 2
+        const writeSegs = (pairs, buf) => {
+          for (let k = 0; k < pairs.length; k += 2) {
+            const a = pairs[k] * 3
+            const b = pairs[k + 1] * 3
+            const o = k * 3
+            const dx = pos[b] - pos[a]
+            const dy = pos[b + 1] - pos[a + 1]
+            const dz = pos[b + 2] - pos[a + 2]
+            const broken = dx * dx + dy * dy + dz * dz > breakD2
+            buf[o] = pos[a]
+            buf[o + 1] = pos[a + 1]
+            buf[o + 2] = pos[a + 2]
+            buf[o + 3] = broken ? pos[a] : pos[b]
+            buf[o + 4] = broken ? pos[a + 1] : pos[b + 1]
+            buf[o + 5] = broken ? pos[a + 2] : pos[b + 2]
+          }
+        }
+        writeSegs(links, linePos)
+        writeSegs(boldLinks, boldPos)
+        lGeo.attributes.position.needsUpdate = true
+        bGeo.attributes.position.needsUpdate = true
+        const linkOp = SHAPES[shapeIndex].linkOpacity ?? CONFIG.LINK_OPACITY
+        lMat.opacity += (linkOp - lMat.opacity) * 0.1
+        const partOp = SHAPES[shapeIndex].particleOpacity ?? 0.95
+        pMat.opacity += (partOp - pMat.opacity) * 0.1
+        bMat.opacity += (CONFIG.LINK_BOLD_OPACITY - bMat.opacity) * 0.1
+
+        renderer.render(scene, camera)
+        if (canvas.style.opacity !== '1') canvas.style.opacity = '1'
+      }
+
+      const start = () => {
+        if (!running) {
+          running = true
+          rafId = requestAnimationFrame(frame)
+        }
+      }
+      const stop = () => {
+        running = false
+        cancelAnimationFrame(rafId)
+      }
+
+      new IntersectionObserver(([entry]) => (entry.isIntersecting ? start() : stop())).observe(wrapper)
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) stop()
+        else if (wrapper.clientWidth) start()
+      })
+    }
+
+    const tryInit = () => {
+      if (!initialized && wrapper.clientWidth > 0) init()
+    }
+    tryInit()
+    window.matchMedia('(max-width: 720px)').addEventListener('change', tryInit)
+  }
+</script>

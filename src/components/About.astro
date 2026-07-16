@@ -1,29 +1,113 @@
 ---
-import { DATA } from '../data.js';
-const { profile } = DATA.about;
-const entries = Object.entries(profile);
+import { site, translations, defaultLang } from '../data.js'
+
+const { about } = translations[defaultLang]
+
+const assetBase = import.meta.env.BASE_URL.replace(/\/$/, '')
 ---
-<section class="section" id="sobre-mi">
-  <div class="wrap">
-    <div class="reveal"><div class="eyebrow">01 · whoami</div><h2 class="section-title">Sobre <span class="g">mí</span></h2></div>
-    <div class="about-grid reveal">
-      <div class="about-text">
-        <p>Soy estudiante de doble grado en <strong>Ingeniería de Sistemas</strong> y Negocios Internacionales en la USIL. Me apasiona la <span class="hl">ciberseguridad</span> y el desarrollo de tecnología: entender los sistemas por dentro para construirlos mejor y protegerlos.</p>
-        <p>Mi trabajo se apoya en tres pilares: <span class="hl">seguridad</span>, <span class="hl">desarrollo de software</span> e <span class="hl">inteligencia artificial y datos</span>. Mi tesis aplica machine learning para clasificar jugadores de tenis amateur en Lima — datos reales, modelo real, un problema que conozco de cerca.</p>
-        <p>Aprendo rápido, trabajo de forma práctica y estructurada, y llevo lo que estudio a proyectos concretos de inmediato.</p>
+
+<section id="sobre-mi" class="section reveal">
+  <div class="container">
+    <div class="about__grid">
+      <div class="about__text">
+        <h2 class="section__title">
+          <span class="section__num">01.</span>
+          <span data-i18n="about.heading">{about.heading}</span>
+        </h2>
+        {about.paragraphs.map((p, i) => <p data-i18n={`about.paragraphs.${i}`}>{p}</p>)}
       </div>
-      <div class="term-card">
-        <div class="term-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="title">otin@dev: ~/profile</span></div>
-        <div class="term-body">
-          <div class="line"><span class="pr">$</span> whoami --json</div>
-          <div class="out">{'{'}</div>
-          {entries.map(([key, value], i) => (
-            <div class="out">&nbsp;&nbsp;<span class="k">"{key}"</span>: <span class="v">"{value}"</span>{i < entries.length - 1 ? ',' : ''}</div>
-          ))}
-          <div class="out">{'}'}</div>
-          <div class="line"><span class="pr">$</span> <span class="cursor"></span></div>
-        </div>
+
+      <div class="holo-card-scene">
+        <article class="holo-card">
+          <div class="holo-card__inner">
+            <span class="holo-card__serial" aria-hidden="true">Nº 01 · {site.profile.focus}</span>
+            <div class="holo-card__photo">
+              {
+                site.photo ? (
+                  <img src={`${assetBase}${site.photo}`} alt={about.card.photoAlt} loading="lazy" />
+                ) : (
+                  <svg class="holo-card__placeholder" viewBox="0 0 200 240" aria-hidden="true">
+                    <circle cx="100" cy="88" r="40" />
+                    <path d="M28 226c9-52 40-72 72-72s63 20 72 72" />
+                  </svg>
+                )
+              }
+            </div>
+            <div class="holo-card__plate">
+              <p class="holo-card__name">{site.name}</p>
+              <p class="holo-card__role" data-i18n="about.card.role">{about.card.role}</p>
+            </div>
+            <div class="holo-card__meta" aria-hidden="true">
+              <span>{site.profile.location}</span>
+              <span class="holo-card__status">
+                <span class="holo-card__status-dot"></span>
+                <span data-i18n="about.card.status">{about.card.status}</span>
+              </span>
+            </div>
+            <span class="holo-card__shine" aria-hidden="true"></span>
+          </div>
+          <div class="holo-card__back" aria-hidden="true">
+            <div class="holo-card__emblem">
+              <svg viewBox="0 0 200 226" aria-hidden="true">
+                <polygon points="100,4 196,60 196,166 100,222 4,166 4,60" />
+                <polygon points="100,20 182,68 182,158 100,206 18,158 18,68" />
+              </svg>
+              <span class="holo-card__back-logo">
+                <span class="logo-accent">R</span>Roller<span class="cursor">_</span>
+              </span>
+            </div>
+          </div>
+        </article>
       </div>
     </div>
   </div>
 </section>
+
+<script>
+  // Inclinación de la tarjeta y brillo holografico mediante CSS
+  const scene = document.querySelector<HTMLElement>('.holo-card-scene')
+  const card = scene?.querySelector<HTMLElement>('.holo-card')
+  const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches
+
+  if (scene && card && !reducedMotion && matchMedia('(hover: hover)').matches) {
+    scene.addEventListener('mousemove', (e) => {
+      const r = card.getBoundingClientRect()
+      const x = (e.clientX - r.left) / r.width
+      const y = (e.clientY - r.top) / r.height
+      card.style.setProperty('--rx', `${((x - 0.5) * 12).toFixed(2)}deg`)
+      card.style.setProperty('--ry', `${((0.5 - y) * 10).toFixed(2)}deg`)
+      card.style.setProperty('--mx', `${(x * 100).toFixed(1)}%`)
+      card.style.setProperty('--my', `${(y * 100).toFixed(1)}%`)
+    })
+
+    scene.addEventListener('mouseleave', () => {
+      card.style.setProperty('--rx', '0deg')
+      card.style.setProperty('--ry', '0deg')
+    })
+  }
+
+  // Volteo ligado al scroll la tarjeta
+  if (scene && card && !reducedMotion) {
+    const FLIP_START = 0.68
+    const DEAD_ZONE = 0.08
+    let raf = 0
+
+    const updateFlip = () => {
+      raf = 0
+      const r = scene.getBoundingClientRect()
+      const half = (innerHeight + r.height) / 2
+      const p = Math.max(-1, Math.min(1, (r.top + r.height / 2 - innerHeight / 2) / half))
+      const t = Math.min(1, Math.max(0, (Math.abs(p) - DEAD_ZONE) / (FLIP_START - DEAD_ZONE)))
+      card.style.setProperty('--flip', `${(Math.sign(p) * t * 180).toFixed(1)}deg`)
+      card.style.setProperty('--flip-z', `${(t * -17.1).toFixed(1)}deg`)
+    }
+
+    const requestFlip = () => {
+      if (!raf) raf = requestAnimationFrame(updateFlip)
+    }
+
+    addEventListener('scroll', requestFlip, { passive: true })
+    addEventListener('resize', requestFlip)
+    updateFlip()
+  }
+</script>

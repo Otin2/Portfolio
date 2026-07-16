@@ -1,33 +1,274 @@
 ---
-import { DATA } from '../data.js';
+import { site, translations, defaultLang } from '../data.js'
+
+const t = translations[defaultLang]
 ---
-<nav class="nav" id="nav">
-  <div class="nav-inner">
-    <a href="#inicio" class="nav-logo">{DATA.logo.user}<span class="p">.</span>{DATA.logo.tld}<span class="c">_</span></a>
-    <div class="nav-links" id="navlinks">
-      {DATA.nav.map((item) => (
-        <a href={item.href}><span class="n">{item.num}</span>{item.label}</a>
-      ))}
-      <a href="#contacto" class="nav-cta">Contacto</a>
-    </div>
-    <button class="nav-burger" id="burger" aria-label="Abrir menú">☰</button>
+
+<header class="navbar" id="navbar">
+  <a class="navbar__logo" href="#inicio" aria-label="Inicio">
+    <span class="logo-accent">{site.logo.accent}</span>{site.logo.rest}<span class="cursor" aria-hidden="true">_</span>
+  </a>
+
+  <nav class="navbar__pill" aria-label="Principal">
+    <span class="navbar__shine" aria-hidden="true"></span>
+
+    <a class="navbar__logo-mobile" href="#inicio" aria-label="Inicio">
+      <span class="logo-accent">{site.logo.accent}</span>{site.logo.rest}<span class="cursor" aria-hidden="true">_</span>
+    </a>
+
+    <ul id="menu-principal" class="navbar__menu">
+      {
+        t.nav.map((item, i) => (
+          <li>
+            <a href={`#${item.id}`}>
+              <span data-i18n={`nav.${i}.label`}>{item.label}</span>
+            </a>
+          </li>
+        ))
+      }
+      <li class="navbar__menu-cta">
+        <a class="navbar__cta" href={t.navCta.href} data-i18n="navCta.label">{t.navCta.label}</a>
+      </li>
+    </ul>
+
+    <button
+      class="navbar__toggle"
+      aria-expanded="false"
+      aria-controls="menu-principal"
+      aria-label="Abrir menú"
+    >
+      <span class="navbar__bars" aria-hidden="true">
+        <span></span>
+        <span></span>
+        <span></span>
+      </span>
+    </button>
+  </nav>
+
+  <div class="navbar__controls">
+    <span class="navbar__shine" aria-hidden="true"></span>
+
+    <button
+      id="theme-toggle"
+      class="navbar__control"
+      type="button"
+      aria-label={t.ui.themeLabel}
+      title={t.ui.themeLabel}
+    >
+      <svg class="icon icon-moon" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+      </svg>
+      <svg class="icon icon-sun" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="4"></circle>
+        <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
+      </svg>
+    </button>
+
+    <button
+      id="lang-toggle"
+      class="navbar__control navbar__control--lang"
+      type="button"
+      aria-label={t.ui.langLabel}
+      title={t.ui.langLabel}
+    >
+      <svg class="icon" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="10"></circle>
+        <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+      </svg>
+      <span class="navbar__lang-code" id="lang-code">{defaultLang.toUpperCase()}</span>
+    </button>
   </div>
-</nav>
+</header>
 
 <script>
-  const nav = document.getElementById('nav');
-  window.addEventListener('scroll', () => {
-    nav.classList.toggle('scrolled', window.scrollY > 40);
-  });
+  const navbar = document.getElementById('navbar')!
+  const toggle = navbar.querySelector('.navbar__toggle')!
+  const bars = navbar.querySelector('.navbar__bars')!
+  const menu = navbar.querySelector('.navbar__menu')!
 
-  const burger = document.getElementById('burger');
-  const links = document.getElementById('navlinks');
-  burger.addEventListener('click', () => {
-    const open = links.classList.toggle('open');
-    burger.textContent = open ? '✕' : '☰';
-  });
-  links.addEventListener('click', () => {
-    links.classList.remove('open');
-    burger.textContent = '☰';
-  });
+  const onScroll = () => navbar.classList.toggle('navbar--scrolled', window.scrollY > 40)
+  onScroll()
+  window.addEventListener('scroll', onScroll, { passive: true })
+
+  const setOpen = (open: boolean) => {
+    menu.classList.toggle('navbar__menu--open', open)
+    bars.classList.toggle('navbar__bars--open', open)
+    toggle.setAttribute('aria-expanded', String(open))
+    toggle.setAttribute('aria-label', open ? 'Cerrar menú' : 'Abrir menú')
+  }
+
+  toggle.addEventListener('click', () => setOpen(!menu.classList.contains('navbar__menu--open')))
+  menu.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => setOpen(false)))
+  document.addEventListener('click', (e) => {
+    if (menu.classList.contains('navbar__menu--open') && !navbar.contains(e.target as Node)) {
+      setOpen(false)
+    }
+  })
+
+  // Rayo que rodea el navbar y persigue al cursor
+  const SVGNS = 'http://www.w3.org/2000/svg'
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  const STROKE = 1.8
+  const LAP_TIME = 6.5
+  const FOLLOW = 5
+  const K = 90
+  const CYCLE = 3200
+  const WAVES = 1
+
+  // Cambios de color del rayo
+  const hexToRgb = (hex: string) => {
+    const h = hex.trim().replace('#', '')
+    const s = h.length === 3 ? [...h].map((c) => c + c).join('') : h
+    return [0, 2, 4].map((i) => parseInt(s.slice(i, i + 2), 16))
+  }
+  let SKY = [56, 189, 248]
+  let VIOLET = [139, 92, 246]
+  const readAccents = () => {
+    const styles = getComputedStyle(document.documentElement)
+    const beamA = styles.getPropertyValue('--beam-a')
+    const beamB = styles.getPropertyValue('--beam-b')
+    if (beamA) SKY = hexToRgb(beamA)
+    if (beamB) VIOLET = hexToRgb(beamB)
+  }
+  readAccents()
+  new MutationObserver(readAccents).observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['data-theme'],
+  })
+
+  const colorAt = (t: number, phase: number) => {
+    const m = 0.5 - 0.5 * Math.cos((t * WAVES + phase) * Math.PI * 2)
+    return `rgb(${SKY.map((v, i) => Math.round(v + (VIOLET[i] - v) * m)).join(',')})`
+  }
+
+  navbar.querySelectorAll<HTMLElement>('.navbar__pill, .navbar__controls').forEach((pill) => {
+    const shine = pill.querySelector('.navbar__shine')
+    if (!shine) return
+
+    const svg = document.createElementNS(SVGNS, 'svg')
+    svg.setAttribute('preserveAspectRatio', 'none')
+    svg.style.position = 'absolute'
+    svg.style.inset = '0'
+    svg.style.width = '100%'
+    svg.style.height = '100%'
+    const geom = document.createElementNS(SVGNS, 'rect')
+    geom.setAttribute('fill', 'none')
+    svg.appendChild(geom)
+    shine.appendChild(svg)
+
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d')!
+    shine.appendChild(canvas)
+
+    let perim = 0
+    let half = 0
+    let rayLen = 0
+    let dpr = 1
+    let pts: { x: number; y: number }[] = []
+
+    const resize = () => {
+      const w = pill.clientWidth
+      const h = pill.clientHeight
+      if (!w || !h) return
+      dpr = Math.min(window.devicePixelRatio || 1, 2)
+      canvas.width = Math.round(w * dpr)
+      canvas.height = Math.round(h * dpr)
+      canvas.style.width = '100%'
+      canvas.style.height = '100%'
+      svg.setAttribute('viewBox', `0 0 ${w} ${h}`)
+      geom.setAttribute('x', String(STROKE / 2))
+      geom.setAttribute('y', String(STROKE / 2))
+      geom.setAttribute('width', String(w - STROKE))
+      geom.setAttribute('height', String(h - STROKE))
+      geom.setAttribute('rx', String((h - STROKE) / 2))
+      perim = geom.getTotalLength()
+      rayLen = Math.min(perim * 0.32, 300)
+      half = rayLen / 2
+      const n = Math.max(160, Math.round(perim / 3))
+      pts = []
+      for (let i = 0; i < n; i++) {
+        const p = geom.getPointAtLength((i / n) * perim)
+        pts.push({ x: p.x, y: p.y })
+      }
+    }
+    resize()
+    new ResizeObserver(resize).observe(pill)
+
+    const pointAt = (l: number) => {
+      const n = pts.length
+      const f = (((l % perim) + perim) % perim) / perim * n
+      const i0 = Math.floor(f) % n
+      const i1 = (i0 + 1) % n
+      const k = f - Math.floor(f)
+      const a = pts[i0]
+      const b = pts[i1]
+      return { x: a.x + (b.x - a.x) * k, y: a.y + (b.y - a.y) * k }
+    }
+
+    // Dibuja el rayo por segmentos con opacidad
+    const draw = (center: number, phase: number) => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
+      ctx.lineWidth = STROKE * dpr
+      ctx.lineCap = 'butt'
+      ctx.lineJoin = 'round'
+      let prev = pointAt(center - half)
+      for (let i = 1; i <= K; i++) {
+        const p = pointAt(center - half + (i / K) * rayLen)
+        const tm = (i - 0.5) / K
+        const e = Math.min(1, Math.min(tm, 1 - tm) / 0.32)
+        ctx.globalAlpha = e * e * (3 - 2 * e)
+        ctx.strokeStyle = colorAt(tm, phase)
+        ctx.beginPath()
+        ctx.moveTo(prev.x * dpr, prev.y * dpr)
+        ctx.lineTo(p.x * dpr, p.y * dpr)
+        ctx.stroke()
+        prev = p
+      }
+      ctx.globalAlpha = 1
+    }
+
+    const nearestLength = (mx: number, my: number) => {
+      let best = 0
+      let bestDist = Infinity
+      for (let i = 0; i < pts.length; i++) {
+        const dist = (pts[i].x - mx) ** 2 + (pts[i].y - my) ** 2
+        if (dist < bestDist) {
+          bestDist = dist
+          best = (i / pts.length) * perim
+        }
+      }
+      return best
+    }
+
+    let center = Math.random() * 1000
+    let target: number | null = null
+    let last = performance.now()
+
+    const frame = (now: number) => {
+      const dt = Math.min(0.05, (now - last) / 1000)
+      last = now
+      if (perim > 0) {
+        if (target == null) {
+          const speed = reduced ? 0 : perim / LAP_TIME
+          center = (center + speed * dt) % perim
+        } else {
+          const diff = ((target - center + perim * 1.5) % perim) - perim / 2
+          center = (center + diff * Math.min(1, dt * FOLLOW) + perim) % perim
+        }
+        const phase = reduced ? 0 : now / CYCLE
+        draw(center, phase)
+      }
+      requestAnimationFrame(frame)
+    }
+    requestAnimationFrame(frame)
+
+    pill.addEventListener('pointermove', (e) => {
+      if (perim <= 0) return
+      const r = pill.getBoundingClientRect()
+      target = nearestLength(e.clientX - r.left, e.clientY - r.top)
+    })
+    pill.addEventListener('pointerleave', () => {
+      target = null
+    })
+  })
 </script>

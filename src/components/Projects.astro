@@ -1,74 +1,328 @@
 ---
-import { DATA } from '../data.js';
+import { translations, defaultLang } from '../data.js'
+
+const { projects } = translations[defaultLang]
+
+const assetBase = import.meta.env.BASE_URL.replace(/\/$/, '')
 ---
-<section class="section" id="proyectos">
-  <div class="wrap">
-    <div class="reveal"><div class="eyebrow">04 · proyectos</div><h2 class="section-title">Proyectos <span class="g">personales</span></h2></div>
-    <div class="proj-grid reveal">
-      {DATA.projects.map((proj) => (
-        <div class="proj-card">
-          <div class="proj-head">
-            <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
-            <span class="win">otin@dev: ~/proyectos</span>
-            <span class="proj-tag">{proj.tag}</span>
-          </div>
-          <div class="proj-body">
-            <div class="proj-cmd"><span class="pr"><span class="u">otin@dev</span>:~$</span> <span class="type" data-text={proj.cmd}></span></div>
-            <div class="proj-reveal">
-              <div class="proj-title">{proj.title}</div>
-              <div class="proj-desc">{proj.desc}</div>
-              <div class="proj-stack">
-                {proj.stack.map((tech) => <span>{tech}</span>)}
+
+<section id="proyectos" class="section reveal">
+  <div class="container">
+    <h2 class="section__title">
+      <span class="section__num">04.</span>
+      <span data-i18n="projects.heading">{projects.heading}</span>
+    </h2>
+  </div>
+
+  {/* Carrusel en bucle para proyectos */}
+  <div class="projects__carousel">
+    <div class="projects__track">
+      {
+        [0, 1].map((copy) =>
+          projects.items.map((project, i) => (
+            <article
+              class="project-card"
+              data-command={`cat ${project.file}`}
+              data-project={i}
+              aria-hidden={copy === 1 ? 'true' : undefined}
+            >
+              <div class="project-card__bar">
+                <span class="terminal__dot terminal__dot--red" aria-hidden="true" />
+                <span class="terminal__dot terminal__dot--yellow" aria-hidden="true" />
+                <span class="terminal__dot terminal__dot--green" aria-hidden="true" />
+                <span class="project-card__path">rroller@dev: ~/proyectos</span>
+                <span
+                  class={`project-card__badge project-card__badge--${project.type}`}
+                  data-i18n={`projects.items.${i}.label`}
+                >
+                  {project.label}
+                </span>
               </div>
-              <a href={proj.link.href} class="proj-link">{proj.link.label}</a>
-            </div>
-          </div>
-        </div>
-      ))}
+
+              <div class="project-card__body">
+                {copy === 0 && (
+                  <button class="sr-only project-card__open" type="button" aria-haspopup="dialog">
+                    {project.title}
+                  </button>
+                )}
+                <p class="project-card__prompt" aria-hidden="true">
+                  <span class="term-user">rroller@dev</span>
+                  <span class="term-symbol">:~$</span>{' '}
+                  <span class="project-card__cmd" />
+                  <span class="cursor project-card__cursor" hidden>
+                    ▊
+                  </span>
+                </p>
+
+                <div class="project-card__output">
+                  <figure class="project-card__figure">
+                    <img
+                      class="project-card__img"
+                      src={`${assetBase}/projects/${project.image}`}
+                      alt=""
+                      loading="lazy"
+                      width="640"
+                      height="360"
+                      draggable="false"
+                    />
+                  </figure>
+                  <h3 class="project-card__title" data-i18n={`projects.items.${i}.title`}>
+                    {project.title}
+                  </h3>
+                  <p class="project-card__description" data-i18n={`projects.items.${i}.description`}>
+                    {project.description}
+                  </p>
+                  <ul class="project-card__stack" aria-label="Stack tecnológico">
+                    {project.stack.map((tech) => (
+                      <li>
+                        <span class="project-card__hash" aria-hidden="true">
+                          #
+                        </span>
+                        {tech}
+                      </li>
+                    ))}
+                  </ul>
+                  <a class="project-card__link" href={project.link.href} target="_blank" rel="noreferrer">
+                    <span class="project-card__dollar" aria-hidden="true">$</span>{' '}
+                    <span data-i18n={`projects.items.${i}.link.label`}>{project.link.label}</span>
+                  </a>
+                </div>
+              </div>
+            </article>
+          )),
+        )
+      }
     </div>
   </div>
+
+  {/* Ventana emergente por proyecto */}
+  {
+    projects.items.map((project, i) => (
+      <dialog class="project-modal" id={`project-modal-${i}`} aria-labelledby={`project-modal-title-${i}`}>
+        <article class="project-modal__window">
+          <div class="project-card__bar">
+            <button class="project-modal__close terminal__dot terminal__dot--red" type="button" aria-label="Cerrar" />
+            <span class="terminal__dot terminal__dot--yellow" aria-hidden="true" />
+            <span class="terminal__dot terminal__dot--green" aria-hidden="true" />
+            <span class="project-card__path">rroller@dev: ~/proyectos</span>
+            <span
+              class={`project-card__badge project-card__badge--${project.type}`}
+              data-i18n={`projects.items.${i}.label`}
+            >
+              {project.label}
+            </span>
+          </div>
+
+          <div class="project-modal__body">
+            <p class="project-card__prompt" aria-hidden="true">
+              <span class="term-user">rroller@dev</span>
+              <span class="term-symbol">:~$</span> cat {project.file}
+            </p>
+
+            <figure class="project-card__figure project-modal__figure">
+              <img
+                class="project-card__img"
+                src={`${assetBase}/projects/${project.image}`}
+                alt=""
+                loading="lazy"
+                width="640"
+                height="360"
+                draggable="false"
+              />
+            </figure>
+            <h3 class="project-card__title" id={`project-modal-title-${i}`} data-i18n={`projects.items.${i}.title`}>
+              {project.title}
+            </h3>
+            <p class="project-card__description project-modal__description" data-i18n={`projects.items.${i}.description`}>
+              {project.description}
+            </p>
+            <ul class="project-card__stack" aria-label="Stack tecnológico">
+              {project.stack.map((tech) => (
+                <li>
+                  <span class="project-card__hash" aria-hidden="true">
+                    #
+                  </span>
+                  {tech}
+                </li>
+              ))}
+            </ul>
+            <a class="project-card__link" href={project.link.href} target="_blank" rel="noreferrer">
+              <span class="project-card__dollar" aria-hidden="true">$</span>{' '}
+              <span data-i18n={`projects.items.${i}.link.label`}>{project.link.label}</span>
+            </a>
+          </div>
+        </article>
+      </dialog>
+    ))
+  }
 </section>
 
 <script>
-  // Tecleo letra por letra del comando cuando la tarjeta entra en el viewport
-  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // Teclea el comando letra por letra cuando la tarjeta entra en el viewport
+  const TYPE_SPEED_MS = 25
+  const cards = document.querySelectorAll<HTMLElement>('.project-card')
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
-  function typeCard(cardBody) {
-    const span = cardBody.querySelector('.type');
-    const reveal = cardBody.querySelector('.proj-reveal');
-    const text = span.getAttribute('data-text');
-    if (reduced) {
-      span.textContent = text;
-      reveal.classList.add('show');
-      return;
-    }
-    let i = 0;
-    const cur = document.createElement('span');
-    cur.className = 'blink-cur';
-    span.after(cur);
-    const tick = () => {
-      if (i <= text.length) {
-        span.textContent = text.slice(0, i);
-        i++;
-        setTimeout(tick, 42);
-      } else {
-        cur.remove();
-        reveal.classList.add('show');
-      }
-    };
-    tick();
+  const finish = (card: HTMLElement) => {
+    card.querySelector('.project-card__cmd')!.textContent = card.dataset.command ?? ''
+    ;(card.querySelector('.project-card__cursor') as HTMLElement).hidden = true
+    card.querySelector('.project-card__output')!.classList.add('project-card__output--visible')
   }
 
-  const typeIO = new IntersectionObserver(
-    (es) => {
-      es.forEach((e) => {
-        if (e.isIntersecting) {
-          typeCard(e.target);
-          typeIO.unobserve(e.target);
+  const typeCommand = (card: HTMLElement) => {
+    const command = card.dataset.command ?? ''
+    const cmdEl = card.querySelector('.project-card__cmd')!
+    const cursor = card.querySelector('.project-card__cursor') as HTMLElement
+    cursor.hidden = false
+
+    let i = 0
+    const tick = window.setInterval(() => {
+      i += 1
+      cmdEl.textContent = command.slice(0, i)
+      if (i >= command.length) {
+        window.clearInterval(tick)
+        window.setTimeout(() => finish(card), 150)
+      }
+    }, TYPE_SPEED_MS)
+  }
+
+  if (reduced || !('IntersectionObserver' in window)) {
+    cards.forEach(finish)
+  } else {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            typeCommand(entry.target as HTMLElement)
+            observer.unobserve(entry.target)
+          }
+        })
+      },
+      { threshold: 0.35 },
+    )
+    cards.forEach((card) => observer.observe(card))
+  }
+
+  // Carrusel se puede arrastrar para aumentar velocidad
+  const CAROUSEL = {
+    BASE_SPEED: 0.45,
+    DRAG_GAIN: 1.15,
+    DAMPING: 0.95,
+    CLICK_TOLERANCE: 6,
+  }
+
+  const carousel = document.querySelector<HTMLElement>('.projects__carousel')
+  const track = document.querySelector<HTMLElement>('.projects__track')
+
+  if (carousel && track) {
+    let offset = 0
+    let velocity = 0
+    let dragging = false
+    let dragDist = 0
+    let lastX = 0
+    let loopWidth = 0
+
+    const items = track.children
+    const measure = () => {
+      const first = items[0] as HTMLElement
+      const clone = items[items.length / 2] as HTMLElement
+      loopWidth = clone.offsetLeft - first.offsetLeft
+    }
+    new ResizeObserver(measure).observe(track)
+    measure()
+
+    carousel.addEventListener('pointerdown', (e) => {
+      if (e.button !== 0) return
+      dragging = true
+      dragDist = 0
+      lastX = e.clientX
+      velocity = 0
+      carousel.classList.add('projects__carousel--dragging')
+    })
+
+    window.addEventListener('pointermove', (e) => {
+      if (!dragging) return
+      const dx = e.clientX - lastX
+      lastX = e.clientX
+      dragDist += Math.abs(dx)
+      offset -= dx * CAROUSEL.DRAG_GAIN
+      velocity = -dx * CAROUSEL.DRAG_GAIN
+    })
+
+    const endDrag = () => {
+      dragging = false
+      carousel.classList.remove('projects__carousel--dragging')
+    }
+    window.addEventListener('pointerup', endDrag)
+    window.addEventListener('pointercancel', endDrag)
+
+    // El click que se dispara al soltar un arrastre no debe abrir ventanas
+    carousel.addEventListener(
+      'click',
+      (e) => {
+        if (dragDist > CAROUSEL.CLICK_TOLERANCE) {
+          e.preventDefault()
+          e.stopPropagation()
         }
-      });
-    },
-    { threshold: 0.4 }
-  );
-  document.querySelectorAll('.proj-body').forEach((el) => typeIO.observe(el));
+      },
+      true,
+    )
+
+    // Bucle de animacion pausado para optimización
+    let running = false
+    let rafId = 0
+
+    const frame = () => {
+      rafId = requestAnimationFrame(frame)
+      if (!dragging) {
+        offset += (reduced ? 0 : CAROUSEL.BASE_SPEED) + velocity
+        velocity *= CAROUSEL.DAMPING
+      }
+      if (loopWidth > 0) {
+        offset = ((offset % loopWidth) + loopWidth) % loopWidth
+      }
+      track.style.transform = `translate3d(${-offset}px, 0, 0)`
+    }
+
+    const start = () => {
+      if (!running) {
+        running = true
+        rafId = requestAnimationFrame(frame)
+      }
+    }
+    const stop = () => {
+      running = false
+      cancelAnimationFrame(rafId)
+    }
+
+    new IntersectionObserver(([entry]) => (entry.isIntersecting ? start() : stop())).observe(carousel)
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) stop()
+      else start()
+    })
+  }
+
+  // Apertura y cierre de la ventana
+  const modals = document.querySelectorAll<HTMLDialogElement>('.project-modal')
+
+  if (modals.length > 0) {
+    const openModal = (card: HTMLElement) => {
+      const modal = document.getElementById(`project-modal-${card.dataset.project}`) as HTMLDialogElement | null
+      modal?.showModal()
+    }
+
+    cards.forEach((card) => {
+      card.addEventListener('click', (e) => {
+        if ((e.target as HTMLElement).closest('a')) return
+        openModal(card)
+      })
+    })
+
+    modals.forEach((modal) => {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) modal.close()
+      })
+      modal.querySelector('.project-modal__close')?.addEventListener('click', () => modal.close())
+    })
+  }
 </script>

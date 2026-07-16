@@ -1,17 +1,22 @@
 ---
-import { DATA } from '../data.js';
-const year = new Date().getFullYear();
+import { site, translations, defaultLang } from '../data.js'
+
+const t = translations[defaultLang]
+const year = new Date().getFullYear()
 ---
+
 <footer class="footer">
-  <div class="wrap footer-inner">
-    <div>
-      <div class="footer-logo">{DATA.logo.user}<span class="p">.</span>{DATA.logo.tld}</div>
-      <div class="footer-meta">© {year} · built with Astro · Lima, PE</div>
-    </div>
-    <div class="footer-socials">
-      <a href={DATA.contact.github}>GitHub</a>
-      <a href={DATA.contact.linkedin}>LinkedIn</a>
-      <a href={`mailto:${DATA.contact.email}`}>Email</a>
-    </div>
+  <div class="container footer__inner">
+    <p class="footer__logo">
+      <span class="logo-accent">{site.logo.accent}</span>{site.logo.rest}<span class="cursor" aria-hidden="true">_</span>
+    </p>
+    <p class="footer__copy">
+      © {year} {site.name}. <span data-i18n="ui.builtWith">{t.ui.builtWith}</span>
+    </p>
+    <ul class="footer__socials" aria-label="Redes sociales">
+      <li><a href={site.socials.github} target="_blank" rel="noreferrer">GitHub</a></li>
+      <li><a href={site.socials.linkedin} target="_blank" rel="noreferrer">LinkedIn</a></li>
+      <li><a href={`mailto:${site.email}`}>Email</a></li>
+    </ul>
   </div>
 </footer>

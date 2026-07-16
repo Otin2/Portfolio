@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="754.55 0 245.45 250.5">
+  <!-- X final del wordmark oficial de Trellix (Wikimedia); el negro #1a1a1a
+       se aclara a gris para que se vea sobre el fondo oscuro -->
+  <defs>
+    <radialGradient id="trellix-g" cx="856.63" cy="123.19" r="182.23" gradientUnits="userSpaceOnUse">
+      <stop offset="0.07" stop-color="#2814ff"/>
+      <stop offset="0.08" stop-color="#2718ff"/>
+      <stop offset="0.23" stop-color="#1654ff"/>
+      <stop offset="0.35" stop-color="#0a80ff"/>
+      <stop offset="0.45" stop-color="#039bff"/>
+      <stop offset="0.5" stop-color="#00a5ff"/>
+      <stop offset="1" stop-color="#00cd00"/>
+    </radialGradient>
+  </defs>
+  <path fill="url(#trellix-g)" d="M904.59,122.12H852.4L947.81,0H1000Z"/>
+  <polygon fill="#CFD8DC" points="951.24 247.66 806.74 62.8 754.55 62.8 826.77 155.19 754.55 247.66 806.74 247.66 852.88 188.59 899.05 247.66 951.24 247.66"/>
+</svg>

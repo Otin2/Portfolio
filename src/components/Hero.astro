@@ -1,19 +1,52 @@
 ---
-import { DATA } from '../data.js';
-const { hero } = DATA;
+import { translations, defaultLang } from '../data.js'
+import NeuralSphere from './NeuralSphere.astro'
+
+const { hero } = translations[defaultLang]
 ---
-<header class="hero" id="inicio">
-  <div class="hero-bg"><div class="grid"></div><div class="orb orb1"></div><div class="orb orb2"></div></div>
-  <div class="wrap hero-inner">
-    <div class="hero-badge"><span class="pulse"></span> {hero.badge}</div>
-    <h1>{hero.titleStart}<span class="g">{hero.titleGradient}</span>.</h1>
-    <p class="hero-sub">{hero.subtitle}</p>
-    <div class="hero-tags">
-      {hero.tags.map((tag) => <span>{tag}</span>)}
+
+<section id="inicio" class="hero" aria-label="Introducción">
+  <svg class="hero__grid" aria-hidden="true" width="100%" height="100%">
+    <defs>
+      <pattern id="hero-weave" width="48" height="48" patternUnits="userSpaceOnUse">
+        <path
+          d="M0 24 L24 0 M24 48 L48 24 M0 0 L48 48"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1"></path>
+        <circle cx="24" cy="24" r="1.5" fill="currentColor"></circle>
+      </pattern>
+    </defs>
+    <rect width="100%" height="100%" fill="url(#hero-weave)"></rect>
+  </svg>
+
+  <div class="container hero__content">
+    <div class="hero__text">
+      <h1 class="hero__title">
+        <span data-i18n="hero.titleStart">{hero.titleStart}</span>
+        <span class="hero__name" data-i18n="hero.titleGradient">{hero.titleGradient}</span>
+      </h1>
+
+      <p class="hero__role" data-i18n="hero.role">{hero.role}</p>
+
+      <p class="hero__subtitle" data-i18n="hero.subtitle">{hero.subtitle}</p>
+
+      <ul class="hero__tags" aria-label="Áreas de enfoque">
+        {hero.tags.map((tag, i) => <li class="hero__tag" data-i18n={`hero.tags.${i}`}>{tag}</li>)}
+      </ul>
+
+      <div class="hero__actions">
+        <a class="btn btn--primary" href={hero.ctaPrimary.href} data-i18n="hero.ctaPrimary.label">
+          {hero.ctaPrimary.label}
+        </a>
+        <a class="btn btn--ghost" href={hero.ctaSecondary.href} download data-i18n="hero.ctaSecondary.label">
+          {hero.ctaSecondary.label}
+        </a>
+      </div>
     </div>
-    <div class="hero-actions">
-      <a href={hero.ctaPrimary.href} class="btn btn-primary">{hero.ctaPrimary.label}</a>
-      <a href={hero.ctaGhost.href} class="btn btn-ghost">{hero.ctaGhost.label}</a>
+
+    <div class="hero__placeholder" aria-hidden="true">
+      <NeuralSphere />
     </div>
   </div>
-</header>
+</section>

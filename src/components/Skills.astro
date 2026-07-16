@@ -1,20 +1,645 @@
 ---
-import { DATA } from '../data.js';
+import { translations, defaultLang } from '../data.js'
+
+const { skills } = translations[defaultLang]
+const skillsEs = translations.es.skills
+
+const assetBase = import.meta.env.BASE_URL.replace(/\/$/, '')
+
+const SKILLS = [
+  { id: 'linux', icon: 'linux.svg', lightIcon: 'linux-light.svg', color: '#FCC624', cat: 'cyber', scale: 1.3 },
+  { id: 'networks', inline: 'network', color: '#0d6efd', cat: 'cyber' },
+  { id: 'kali', icon: 'kali.svg', color: '#6BA3C4', cat: 'cyber', scale: 1.25 },
+  { id: 'wireshark', icon: 'wireshark.svg', color: '#4AA8E0', cat: 'cyber' },
+  { id: 'maltego', icon: 'maltego.png', color: '#FFB30F', cat: 'cyber' },
+  { id: 'trellix', icon: 'trellix.svg', color: '#00A5FF', cat: 'cyber' },
+  { id: 'crowdstrike', icon: 'crowdstrike.svg', color: '#FC0000', cat: 'cyber' },
+  { id: 'automox', icon: 'automox.svg', color: '#009CC9', cat: 'cyber' },
+  { id: 'forcepoint', icon: 'forcepoint.svg', color: '#00AF9A', cat: 'cyber', scale: 0.85 },
+
+  { id: 'react', icon: 'react.svg', color: '#61DAFB', cat: 'dev' },
+  { id: 'reactnative', icon: 'reactnative.svg', color: '#9F7AEA', cat: 'dev' },
+  { id: 'astro', icon: 'astro.svg', color: '#FF5D01', cat: 'dev' },
+  { id: 'supabase', icon: 'supabase.svg', color: '#3ECF8E', cat: 'dev', detail: true },
+  { id: 'firebase', icon: 'firebase.svg', color: '#FFCA28', cat: 'dev' },
+  { id: 'wordpress', icon: 'wordpress.svg', color: '#5AA9D6', cat: 'dev', detail: true },
+  { id: 'languages', inline: 'code', color: '#7DD3FC', cat: 'dev', isGroup: true },
+  { id: 'javascript', icon: 'javascript.svg', color: '#F7DF1E', cat: 'dev', group: 'languages' },
+  { id: 'typescript', icon: 'typescript.svg', color: '#4E8FDC', cat: 'dev', group: 'languages' },
+  { id: 'python', icon: 'python.svg', color: '#5A9FD4', cat: 'dev', group: 'languages' },
+  { id: 'java', icon: 'java.svg', color: '#E7A34C', cat: 'dev', group: 'languages', scale: 1.25 },
+  { id: 'cpp', icon: 'cpp.svg', color: '#659AD2', cat: 'dev', group: 'languages', detail: true },
+  { id: 'swift', icon: 'swift.svg', color: '#F05138', cat: 'dev', group: 'languages' },
+  { id: 'html', icon: 'html.svg', color: '#E34F26', cat: 'dev', group: 'languages', detail: true },
+  { id: 'css', icon: 'css.svg', color: '#5B8DEF', cat: 'dev', group: 'languages', detail: true },
+
+  { id: 'postgresql', icon: 'postgresql.svg', color: '#6B8FE8', cat: 'aidata' },
+  { id: 'mysql', icon: 'mysql.svg', color: '#4A9FC4', cat: 'aidata', scale: 1.25 },
+  { id: 'oracle', icon: 'oracle.svg', color: '#FF5A5A', cat: 'aidata' },
+  { id: 'mongodb', icon: 'mongodb.svg', color: '#47A248', cat: 'aidata', detail: true, scale: 1.2 },
+  { id: 'powerbi', inline: 'chart', color: '#F2C811', cat: 'aidata', scale: 1.2 },
+
+  { id: 'git', icon: 'git.svg', color: '#F05032', cat: 'tools' },
+  { id: 'github', icon: 'github.svg', color: '#cfd8dc', cat: 'tools' },
+  { id: 'docker', icon: 'docker.svg', color: '#2496ED', cat: 'tools' },
+  { id: 'pnpm', icon: 'pnpm.svg', color: '#F69220', cat: 'tools' },
+  { id: 'jenkins', icon: 'jenkins.svg', color: '#E8807C', cat: 'tools', detail: true, scale: 1.4 },
+  { id: 'figma', icon: 'figma.svg', color: '#A259FF', cat: 'tools', detail: true, scale: 1.2 },
+  { id: 'virtualbox', icon: 'virtualbox.svg', color: '#2F6FE0', cat: 'tools' },
+  { id: 'vmware', icon: 'vmware.png', color: '#5BA7DC', cat: 'tools', detail: true },
+  { id: 'vscode', icon: 'vscode.svg', color: '#3EA7E1', cat: 'tools' },
+  { id: 'claude', icon: 'claude.svg', color: '#D97757', cat: 'tools' },
+  { id: 'chatgpt', icon: 'chatgpt.svg', color: '#74AA9C', cat: 'tools' },
+  { id: 'copilot', icon: 'copilot.svg', color: '#cfd8dc', cat: 'tools' },
+]
+
+const CATEGORY_KEYS = ['all', 'cyber', 'dev', 'aidata', 'tools']
+const ZONE_KEYS = ['cyber', 'dev', 'aidata', 'tools']
+
+const INLINE_ICONS = {
+  network:
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="5" r="2.2"/><circle cx="5" cy="19" r="2.2"/><circle cx="19" cy="19" r="2.2"/><path d="M12 7.2v4.3M10.9 13.4 6.2 17.1M13.1 13.4l4.7 3.7"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/></svg>',
+  chart:
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 20h16"/><rect x="5.5" y="10" width="3.4" height="7" rx="0.6"/><rect x="10.3" y="5.5" width="3.4" height="11.5" rx="0.6"/><rect x="15.1" y="12.5" width="3.4" height="4.5" rx="0.6"/></svg>',
+  code:
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="m8 8-4.5 4L8 16"/><path d="m16 8 4.5 4L16 16"/><path d="M13.4 5 10.6 19"/></svg>',
+}
 ---
-<section class="section" id="skills">
-  <div class="wrap">
-    <div class="reveal"><div class="eyebrow">02 · skills</div><h2 class="section-title">Stack <span class="g">técnico</span></h2></div>
-    <div class="skills-grid reveal">
-      {DATA.skills.map((cat) => (
-        <div class="skill-cat">
-          {cat.rank && <span class="rank">{cat.rank}</span>}
-          <div class="idx">{cat.idx}</div>
-          <h3>{cat.title}</h3>
-          <div class="chips">
-            {cat.chips.map((chip) => <span class="chip">{chip}</span>)}
-          </div>
+
+<section id="skills" class="section reveal">
+  <div class="container">
+    <h2 class="section__title">
+      <span class="section__num">02.</span>
+      <span data-i18n="skills.heading">{skills.heading}</span>
+    </h2>
+
+    <div class="skills__filter" role="group" aria-label="Skill filters">
+      {
+        CATEGORY_KEYS.map((key) => (
+          <button
+            class="filter-btn"
+            data-cat={key}
+            aria-pressed={key === 'all' ? 'true' : 'false'}
+            data-i18n={`skills.filters.${key}`}
+          >
+            {skills.filters[key]}
+          </button>
+        ))
+      }
+    </div>
+
+    <div class="map-scene">
+      <div class="skills-map" id="skills-map">
+        <svg class="map-weave" aria-hidden="true" width="100%" height="100%">
+          <defs>
+            <pattern id="skills-weave" width="48" height="48" patternUnits="userSpaceOnUse">
+              <path d="M0 24 L24 0 M24 48 L48 24 M0 0 L48 48" fill="none" stroke="currentColor" stroke-width="1"
+              ></path>
+              <circle cx="24" cy="24" r="1.5" fill="currentColor"></circle>
+            </pattern>
+            <filter id="skills-brush" x="-20%" y="-20%" width="140%" height="140%">
+              <feTurbulence type="fractalNoise" baseFrequency="0.02 0.07" numOctaves="2" seed="7" result="noise"
+              ></feTurbulence>
+              <feDisplacementMap in="SourceGraphic" in2="noise" scale="4"></feDisplacementMap>
+            </filter>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#skills-weave)"></rect>
+        </svg>
+        <i class="corner corner--tl" aria-hidden="true"></i><i class="corner corner--tr" aria-hidden="true"></i>
+        <i class="corner corner--bl" aria-hidden="true"></i><i class="corner corner--br" aria-hidden="true"></i>
+
+        <div class="skills__stage" id="skills-stage">
+          <svg class="skills__net" id="skills-net" aria-hidden="true"></svg>
+          {
+            SKILLS.map((s, i) => (
+              <div
+                class:list={['skill-item', { 'is-collapsed': !!s.group }]}
+                data-cat={s.cat}
+                data-group={s.group}
+                data-group-id={s.isGroup ? s.id : undefined}
+                data-detail={s.detail ? '' : undefined}
+                style={`--skill-color:${s.color}`}
+              >
+                <div class="skill-drift">
+                  <div
+                    class:list={['skill-core', { 'skill-core--group': s.isGroup }]}
+                    tabindex="0"
+                    role="button"
+                    aria-label={skills.items[s.id].name}
+                    aria-expanded={s.isGroup ? 'false' : undefined}
+                    data-line-en={`${skills.items[s.id].name} — ${skills.items[s.id].blurb}`}
+                    data-line-es={`${skillsEs.items[s.id].name} — ${skillsEs.items[s.id].blurb}`}
+                    style={`--skill-color:${s.color}; --animation-order:${i}; --icon-scale:${s.scale ?? 1}`}
+                  >
+                    {s.inline ? (
+                      <Fragment set:html={INLINE_ICONS[s.inline]} />
+                    ) : (
+                      <img
+                        class:list={{ 'skill-icon--dark': !!s.lightIcon }}
+                        src={`${assetBase}/icons/skills/${s.icon}`}
+                        alt=""
+                        width="34"
+                        height="34"
+                        loading="lazy"
+                      />
+                    )}
+                    {s.lightIcon && (
+                      <img
+                        class="skill-icon--light"
+                        src={`${assetBase}/icons/skills/${s.lightIcon}`}
+                        alt=""
+                        width="34"
+                        height="34"
+                        loading="lazy"
+                      />
+                    )}
+                    {s.isGroup && <span class="skill-group-badge" aria-hidden="true" />}
+                  </div>
+                </div>
+              </div>
+            ))
+          }
+          {
+            ZONE_KEYS.map((key) => (
+              <span class="zone-label" data-zone={key}>
+                <span data-i18n={`skills.filters.${key}`}>{skills.filters[key]}</span>
+              </span>
+            ))
+          }
         </div>
-      ))}
+
+        <div class="skills__readout" aria-live="polite">
+          <span class="skills__readout-prompt" aria-hidden="true">&gt;</span>
+          <span
+            class="skills__readout-line"
+            id="skills-readout-line"
+            data-i18n="skills.hint"
+            data-hint-en={skills.hint}
+            data-hint-es={skillsEs.hint}>{skills.hint}</span>
+          <span class="cursor" aria-hidden="true">▊</span>
+        </div>
+      </div>
     </div>
   </div>
 </section>
+
+<script>
+  const section = document.getElementById('skills')
+  const map = document.getElementById('skills-map')
+  const stage = document.getElementById('skills-stage')
+  const netSvg = document.getElementById('skills-net')
+  const readout = document.getElementById('skills-readout-line')
+
+  const CLUSTERS = {
+    cyber: { cx: 0.15, cy: 0.42 },
+    dev: { cx: 0.44, cy: 0.32 },
+    aidata: { cx: 0.83, cy: 0.36 },
+    tools: { cx: 0.62, cy: 0.72 },
+  }
+  const CROSS_LINKS = [
+    ['cyber', 'dev'],
+    ['dev', 'aidata'],
+    ['dev', 'tools'],
+    ['aidata', 'tools'],
+  ]
+  const DRIFT = { amp: 1.9, speed: 0.5 }
+
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  const compact = window.matchMedia('(max-width: 760px)')
+
+  let filter = 'all'
+  const expandedGroups = new Set()
+
+  const mulberry32 = (seed) => () => {
+    seed |= 0
+    seed = (seed + 0x6d2b79f5) | 0
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed)
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+  }
+
+  const nodes = [...stage.querySelectorAll('.skill-item')].map((item) => ({
+    item,
+    drift: item.querySelector('.skill-drift'),
+    core: item.querySelector('.skill-core'),
+    cat: item.dataset.cat,
+    group: item.dataset.group || null,
+    groupId: item.dataset.groupId || null,
+    color: item.style.getPropertyValue('--skill-color').trim(),
+    x: 0,
+    y: 0,
+    dx: 0,
+    dy: 0,
+    phase: 0,
+    speed: 0,
+  }))
+  const isOpen = (n) => !n.group || expandedGroups.has(n.group)
+  const labels = Object.fromEntries(
+    [...stage.querySelectorAll('.zone-label')].map((el) => [el.dataset.zone, el]),
+  )
+
+  const relax = (group, minDist, obstacles, bounds, centers, iterations = 120) => {
+    for (let it = 0; it < iterations; it++) {
+      let moved = false
+      for (let i = 0; i < group.length; i++) {
+        for (let j = i + 1; j < group.length; j++) {
+          const a = group[i]
+          const b = group[j]
+          const dx = b.x - a.x
+          const dy = b.y - a.y
+          const d = Math.hypot(dx, dy) || 0.01
+          if (d < minDist) {
+            const push = (minDist - d) / 2 / d
+            a.x -= dx * push
+            a.y -= dy * push
+            b.x += dx * push
+            b.y += dy * push
+            moved = true
+          }
+        }
+      }
+      for (const n of group) {
+        for (const o of obstacles) {
+          let dx = n.x - o.x
+          let dy = n.y - o.y
+          if (dx === 0 && dy === 0) {
+            dx = 0.01
+            dy = 0.01
+          }
+          const de = Math.hypot(dx / o.hx, dy / o.hy)
+          if (de < 1) {
+            const f = (1 / Math.max(de, 0.05) - 1) * 0.6
+            n.x += dx * f
+            n.y += dy * f
+            moved = true
+          }
+        }
+      }
+      if (centers) {
+        for (const n of group) {
+          const c = centers[n.cat]
+          const dx = n.x - c.x
+          const dy = n.y - c.y
+          const d = Math.hypot(dx, dy)
+          if (d > c.leash) {
+            const f = (c.leash / d - 1) * 0.5
+            n.x += dx * f
+            n.y += dy * f
+            moved = true
+          }
+        }
+      }
+      for (const n of group) {
+        n.x = Math.min(Math.max(n.x, bounds.minX), bounds.maxX)
+        n.y = Math.min(Math.max(n.y, bounds.minY), bounds.maxY)
+      }
+      if (!moved) break
+    }
+  }
+
+  const labelObstacles = (W) =>
+    Object.entries(CLUSTERS).map(([cat, c]) => {
+      const members = nodes.filter((n) => n.cat === cat && isOpen(n))
+      return {
+        skip: cat,
+        x: c.cx * W,
+        y: Math.max(Math.min(...members.map((m) => m.y)) - 72, 22),
+        hx: 150,
+        hy: 70,
+      }
+    })
+
+  function layout() {
+    if (compact.matches) return
+    const W = stage.clientWidth
+    const H = stage.clientHeight
+    const s = Math.min(Math.max(W / 1050, 0.7), 1.05)
+    const rand = mulberry32(42)
+
+    netSvg.setAttribute('viewBox', `0 0 ${W} ${H}`)
+
+    const act = nodes.filter(isOpen)
+
+    const centers = {}
+    for (const [cat, c] of Object.entries(CLUSTERS)) {
+      const members = act.filter((n) => n.cat === cat)
+      const cx = c.cx * W
+      const cy = c.cy * H
+      centers[cat] = {
+        x: cx,
+        y: cy,
+        leash: (members.length <= 5 ? 125 : members.length <= 9 ? 155 : 200) * s,
+      }
+      const plain = members.filter((n) => !n.group)
+      plain.forEach((n, k) => {
+        let x = cx
+        let y = cy
+        if (k > 0) {
+          const ring = (k <= 6 ? 95 : 150) * s
+          const angle = k * 2.399 + rand() * 0.55
+          x = cx + Math.cos(angle) * ring * (0.9 + rand() * 0.25)
+          y = cy + Math.sin(angle) * ring * (0.82 + rand() * 0.25)
+        }
+        n.x = x
+        n.y = y
+        n.phase = rand() * Math.PI * 2
+        n.speed = 0.35 + rand() * 0.5
+      })
+      for (const g of expandedGroups) {
+        const gNode = plain.find((n) => n.groupId === g)
+        if (!gNode) continue
+        const mems = members.filter((n) => n.group === g)
+        mems.forEach((n, k) => {
+          const angle = (k / mems.length) * Math.PI * 2 + 0.5
+          n.x = gNode.x + Math.cos(angle) * 95 * s
+          n.y = gNode.y + Math.sin(angle) * 95 * s
+          n.phase = rand() * Math.PI * 2
+          n.speed = 0.35 + rand() * 0.5
+        })
+      }
+    }
+    const bounds = { minX: 46, maxX: W - 46, minY: 46, maxY: H - 120 }
+    relax(act, 86 * s, [], bounds, centers)
+    for (let pass = 0; pass < 3; pass++) {
+      relax(act, 80 * s, labelObstacles(W), bounds, centers, 60)
+    }
+    const frozenLabels = labelObstacles(W)
+    relax(act, 80 * s, frozenLabels, bounds, centers, 80)
+
+    if (filter !== 'all') {
+      const members = act.filter((n) => n.cat === filter)
+      const rz = mulberry32(7)
+      const cx = 0.5 * W
+      const cy = 0.42 * H
+      members.forEach((n, k) => {
+        if (k === 0) {
+          n.x = cx
+          n.y = cy
+          return
+        }
+        const ring = (k <= 6 ? 250 : 360) * s
+        const angle = k * 2.399 + rz() * 0.5
+        n.x = cx + Math.cos(angle) * ring * (0.95 + rz() * 0.18)
+        n.y = cy + Math.sin(angle) * ring * 0.55 * (0.9 + rz() * 0.2)
+      })
+      const zoomBounds = { minX: 95, maxX: W - 95, minY: 85, maxY: H - 145 }
+      relax(members, 118 * s, [], zoomBounds, null)
+      relax(members, 100 * s, [], zoomBounds, null, 30)
+    }
+
+    for (const n of nodes) {
+      if (!isOpen(n)) {
+        const gNode = nodes.find((m) => m.groupId === n.group)
+        if (gNode) {
+          n.x = gNode.x
+          n.y = gNode.y
+        }
+      }
+      n.item.style.left = `${n.x}px`
+      n.item.style.top = `${n.y}px`
+    }
+    if (filter === 'all') {
+      for (const o of frozenLabels) {
+        labels[o.skip].style.left = `${o.x}px`
+        labels[o.skip].style.top = `${o.y}px`
+      }
+    } else {
+      for (const [cat, c] of Object.entries(CLUSTERS)) {
+        const members = nodes.filter((n) => n.cat === cat)
+        const cx = filter === cat ? 0.5 * W : c.cx * W
+        const top = Math.min(...members.map((m) => m.y))
+        labels[cat].style.left = `${cx}px`
+        labels[cat].style.top = `${Math.max(top - 72, 22)}px`
+      }
+    }
+  }
+
+  let edges = []
+  function buildEdges() {
+    netSvg.innerHTML = ''
+    edges = []
+    if (compact.matches) return
+
+    const addEdge = (a, b, bend) => {
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+      netSvg.appendChild(path)
+      edges.push({ a, b, path, bend })
+    }
+
+    for (const cat of Object.keys(CLUSTERS)) {
+      const idxs = nodes.map((n, i) => ({ n, i })).filter((o) => o.n.cat === cat && !o.n.group).map((o) => o.i)
+      idxs.forEach((idx, k) => {
+        if (k === 0) return
+        const parent = idxs[k <= 2 ? 0 : k - 2]
+        addEdge(idx, parent, k % 2 ? 0.22 : -0.22)
+      })
+    }
+    for (const g of expandedGroups) {
+      const gi = nodes.findIndex((n) => n.groupId === g)
+      if (gi < 0) continue
+      nodes.forEach((n, i) => {
+        if (n.group === g) addEdge(i, gi, i % 2 ? 0.18 : -0.18)
+      })
+    }
+    const hub = (cat) => nodes.findIndex((n) => n.cat === cat)
+    CROSS_LINKS.forEach(([a, b], k) => addEdge(hub(a), hub(b), k % 2 ? 0.14 : -0.14))
+
+    drawEdges()
+  }
+
+  function drawEdges() {
+    for (const e of edges) {
+      const a = nodes[e.a]
+      const b = nodes[e.b]
+      const ax = a.x + a.dx
+      const ay = a.y + a.dy
+      const bx = b.x + b.dx
+      const by = b.y + b.dy
+      const mx = (ax + bx) / 2
+      const my = (ay + by) / 2
+      const px = -(by - ay)
+      const py = bx - ax
+      e.path.setAttribute('d', `M ${ax} ${ay} Q ${mx + px * e.bend} ${my + py * e.bend} ${bx} ${by}`)
+    }
+  }
+
+  let litIdx = -1
+  function highlightEdges(idx) {
+    litIdx = idx
+    if (idx >= 0) drawEdges()
+    for (const e of edges) {
+      const visible = filter === 'all' || (nodes[e.a].cat === filter && nodes[e.b].cat === filter)
+      const on = visible && idx >= 0 && (e.a === idx || e.b === idx)
+      e.path.classList.toggle('lit', on)
+      e.path.style.setProperty('--edge-color', on ? nodes[idx].color : '')
+    }
+  }
+
+  let raf = 0
+  let onScreen = false
+  function motionLoop() {
+    cancelAnimationFrame(raf)
+    raf = 0
+    if (reduced || compact.matches) {
+      nodes.forEach((n) => {
+        n.dx = 0
+        n.dy = 0
+        n.drift.style.transform = ''
+      })
+      drawEdges()
+      return
+    }
+    if (!onScreen) return
+    const loop = (ts) => {
+      const t = ts / 1000
+      for (const n of nodes) {
+        n.dx = Math.sin(t * n.speed * DRIFT.speed * 2 + n.phase) * DRIFT.amp
+        n.dy = Math.cos(t * n.speed * DRIFT.speed * 1.6 + n.phase) * DRIFT.amp
+        n.drift.style.transform = `translate(${n.dx}px, ${n.dy}px)`
+      }
+      if (litIdx >= 0) drawEdges()
+      raf = requestAnimationFrame(loop)
+    }
+    raf = requestAnimationFrame(loop)
+  }
+
+  new IntersectionObserver(
+    ([entry]) => {
+      onScreen = entry.isIntersecting
+      if (onScreen) motionLoop()
+      else {
+        cancelAnimationFrame(raf)
+        raf = 0
+      }
+    },
+    { rootMargin: '80px' },
+  ).observe(section)
+
+  function applyFilter() {
+    layout()
+    nodes.forEach((n) => {
+      const off = filter !== 'all' && n.cat !== filter
+      n.item.classList.toggle('is-hidden', off)
+      n.item.classList.toggle('is-collapsed', !isOpen(n))
+      n.item.classList.toggle('is-zoom', filter !== 'all' && !off)
+    })
+    Object.entries(labels).forEach(([cat, el]) => {
+      el.classList.toggle('is-hidden', filter !== 'all' && cat !== filter)
+      el.classList.toggle('is-hot', filter === cat)
+    })
+    highlightEdges(-1)
+  }
+
+  const filterButtons = [...section.querySelectorAll('.filter-btn')]
+  filterButtons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      filter = btn.dataset.cat === filter ? 'all' : btn.dataset.cat
+      filterButtons.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.cat === filter)))
+      applyFilter()
+    })
+  })
+
+  let mapRect = null
+  map.addEventListener('mouseenter', () => {
+    mapRect = map.getBoundingClientRect()
+  })
+  map.addEventListener('mousemove', (e) => {
+    if (reduced || compact.matches || !mapRect) return
+    const rx = ((e.clientY - mapRect.top) / mapRect.height - 0.5) * -2.4
+    const ry = ((e.clientX - mapRect.left) / mapRect.width - 0.5) * 2.4
+    map.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`
+  })
+  map.addEventListener('mouseleave', () => {
+    mapRect = null
+    map.style.transform = ''
+  })
+
+  let typeToken = 0
+  function typeReadout(core) {
+    const token = ++typeToken
+    const lang = document.documentElement.lang === 'es' ? 'es' : 'en'
+    const plain = lang === 'es' ? core.dataset.lineEs : core.dataset.lineEn
+    const sep = plain.indexOf(' — ')
+    const html = `<b>${plain.slice(0, sep)}</b>${plain.slice(sep)}`
+    if (reduced) {
+      readout.innerHTML = html
+      return
+    }
+    let i = 0
+    readout.textContent = ''
+    const step = () => {
+      if (token !== typeToken) return
+      i = Math.min(plain.length, i + 2)
+      readout.textContent = plain.slice(0, i)
+      if (i < plain.length) setTimeout(step, 14)
+      else readout.innerHTML = html
+    }
+    step()
+  }
+
+  let selected = -1
+
+  nodes.forEach((n, i) => {
+    const show = () => {
+      typeReadout(n.core)
+      highlightEdges(i)
+    }
+    const restore = () => {
+      if (selected >= 0) {
+        typeReadout(nodes[selected].core)
+        highlightEdges(selected)
+      } else {
+        highlightEdges(-1)
+      }
+    }
+    n.core.addEventListener('mouseenter', show)
+    n.core.addEventListener('focus', show)
+    n.core.addEventListener('mouseleave', restore)
+    n.core.addEventListener('blur', restore)
+    n.core.addEventListener('click', () => {
+      if (n.groupId) {
+        const open = !expandedGroups.has(n.groupId)
+        expandedGroups[open ? 'add' : 'delete'](n.groupId)
+        n.core.setAttribute('aria-expanded', String(open))
+        applyFilter()
+        buildEdges()
+      }
+      const wasActive = n.core.classList.contains('is-active')
+      stage.querySelectorAll('.is-active').forEach((el) => el.classList.remove('is-active'))
+      if (wasActive) {
+        selected = -1
+        highlightEdges(-1)
+        typeToken++
+        const lang = document.documentElement.lang === 'es' ? 'es' : 'en'
+        readout.textContent = lang === 'es' ? readout.dataset.hintEs : readout.dataset.hintEn
+      } else {
+        selected = i
+        n.core.classList.add('is-active')
+        show()
+      }
+    })
+    n.core.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault()
+        n.core.click()
+      }
+    })
+  })
+
+  function init() {
+    section.classList.remove('is-ready')
+    layout()
+    buildEdges()
+    applyFilter()
+    motionLoop()
+    requestAnimationFrame(() => requestAnimationFrame(() => section.classList.add('is-ready')))
+  }
+  let resizeTimer = 0
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer)
+    resizeTimer = window.setTimeout(init, 200)
+  })
+  compact.addEventListener('change', init)
+
+  init()
+</script>
