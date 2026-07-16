@@ -13,8 +13,8 @@
   --accent-dim: var(--accent);
   --amber: #fbbf24;
 
-  --sphere-a: #0631d1;
-  --sphere-b: #5480fd;
+  --sphere-a: #007bff;
+  --sphere-b: #5ca9ff;
   --sphere-gold: #f5d98b;
 
   --gradient: linear-gradient(100deg, var(--accent), var(--accent-2));
