@@ -20,14 +20,20 @@ const t = translations[defaultLang]
       {
         t.nav.map((item, i) => (
           <li>
-            <a href={`#${item.id}`}>
+            <a href={`#${item.id}`} aria-label={item.label} data-i18n-aria={`nav.${i}.label`}>
               <span data-i18n={`nav.${i}.label`}>{item.label}</span>
             </a>
           </li>
         ))
       }
       <li class="navbar__menu-cta">
-        <a class="navbar__cta" href={t.navCta.href} data-i18n="navCta.label">{t.navCta.label}</a>
+        <a
+          class="navbar__cta"
+          href={t.navCta.href}
+          aria-label={t.navCta.label}
+          data-i18n-aria="navCta.label"
+          data-i18n="navCta.label">{t.navCta.label}</a
+        >
       </li>
     </ul>
 
@@ -81,14 +87,12 @@ const t = translations[defaultLang]
 </header>
 
 <script>
+  import { bindAnimationLifecycle } from '../scripts/visibility.js'
+
   const navbar = document.getElementById('navbar')!
   const toggle = navbar.querySelector('.navbar__toggle')!
   const bars = navbar.querySelector('.navbar__bars')!
   const menu = navbar.querySelector('.navbar__menu')!
-
-  const onScroll = () => navbar.classList.toggle('navbar--scrolled', window.scrollY > 40)
-  onScroll()
-  window.addEventListener('scroll', onScroll, { passive: true })
 
   const setOpen = (open: boolean) => {
     menu.classList.toggle('navbar__menu--open', open)
@@ -111,9 +115,26 @@ const t = translations[defaultLang]
   const STROKE = 1.8
   const LAP_TIME = 6.5
   const FOLLOW = 5
-  const K = 90
+  const compactNavMq = window.matchMedia('(max-width: 760px)')
   const CYCLE = 3200
   const WAVES = 1
+
+  let K = 90
+  let SEG_T: number[] = []
+  let SEG_ALPHA: number[] = []
+  const buildSegments = () => {
+    K = compactNavMq.matches ? 40 : 90
+    SEG_T = []
+    SEG_ALPHA = []
+    for (let i = 1; i <= K; i++) {
+      const tm = (i - 0.5) / K
+      const e = Math.min(1, Math.min(tm, 1 - tm) / 0.32)
+      SEG_T.push(tm)
+      SEG_ALPHA.push(e * e * (3 - 2 * e))
+    }
+  }
+  buildSegments()
+  compactNavMq.addEventListener('change', buildSegments)
 
   // Cambios de color del rayo
   const hexToRgb = (hex: string) => {
@@ -123,12 +144,22 @@ const t = translations[defaultLang]
   }
   let SKY = [56, 189, 248]
   let VIOLET = [139, 92, 246]
+  const LUT_N = 64
+  let colorLUT: string[] = []
+  const buildLUT = () => {
+    colorLUT = []
+    for (let i = 0; i < LUT_N; i++) {
+      const m = i / (LUT_N - 1)
+      colorLUT.push(`rgb(${SKY.map((v, j) => Math.round(v + (VIOLET[j] - v) * m)).join(',')})`)
+    }
+  }
   const readAccents = () => {
     const styles = getComputedStyle(document.documentElement)
     const beamA = styles.getPropertyValue('--beam-a')
     const beamB = styles.getPropertyValue('--beam-b')
     if (beamA) SKY = hexToRgb(beamA)
     if (beamB) VIOLET = hexToRgb(beamB)
+    buildLUT()
   }
   readAccents()
   new MutationObserver(readAccents).observe(document.documentElement, {
@@ -138,7 +169,7 @@ const t = translations[defaultLang]
 
   const colorAt = (t: number, phase: number) => {
     const m = 0.5 - 0.5 * Math.cos((t * WAVES + phase) * Math.PI * 2)
-    return `rgb(${SKY.map((v, i) => Math.round(v + (VIOLET[i] - v) * m)).join(',')})`
+    return colorLUT[Math.round(m * (LUT_N - 1))]
   }
 
   navbar.querySelectorAll<HTMLElement>('.navbar__pill, .navbar__controls').forEach((pill) => {
@@ -214,10 +245,8 @@ const t = translations[defaultLang]
       let prev = pointAt(center - half)
       for (let i = 1; i <= K; i++) {
         const p = pointAt(center - half + (i / K) * rayLen)
-        const tm = (i - 0.5) / K
-        const e = Math.min(1, Math.min(tm, 1 - tm) / 0.32)
-        ctx.globalAlpha = e * e * (3 - 2 * e)
-        ctx.strokeStyle = colorAt(tm, phase)
+        ctx.globalAlpha = SEG_ALPHA[i - 1]
+        ctx.strokeStyle = colorAt(SEG_T[i - 1], phase)
         ctx.beginPath()
         ctx.moveTo(prev.x * dpr, prev.y * dpr)
         ctx.lineTo(p.x * dpr, p.y * dpr)
@@ -243,11 +272,28 @@ const t = translations[defaultLang]
     let center = Math.random() * 1000
     let target: number | null = null
     let last = performance.now()
+    let px = 0
+    let py = 0
+    let pointerDirty = false
+    let rafId = 0
 
+    let skipFrame = false
     const frame = (now: number) => {
+      if (compactNavMq.matches) {
+        skipFrame = !skipFrame
+        if (skipFrame) {
+          rafId = requestAnimationFrame(frame)
+          return
+        }
+      }
       const dt = Math.min(0.05, (now - last) / 1000)
       last = now
       if (perim > 0) {
+        if (pointerDirty) {
+          pointerDirty = false
+          const r = pill.getBoundingClientRect()
+          target = nearestLength(px - r.left, py - r.top)
+        }
         if (target == null) {
           const speed = reduced ? 0 : perim / LAP_TIME
           center = (center + speed * dt) % perim
@@ -258,17 +304,25 @@ const t = translations[defaultLang]
         const phase = reduced ? 0 : now / CYCLE
         draw(center, phase)
       }
-      requestAnimationFrame(frame)
+      rafId = requestAnimationFrame(frame)
     }
-    requestAnimationFrame(frame)
+    const start = () => {
+      last = performance.now()
+      rafId = requestAnimationFrame(frame)
+    }
+    const stop = () => cancelAnimationFrame(rafId)
+    start()
+
+    bindAnimationLifecycle(start, stop)
 
     pill.addEventListener('pointermove', (e) => {
-      if (perim <= 0) return
-      const r = pill.getBoundingClientRect()
-      target = nearestLength(e.clientX - r.left, e.clientY - r.top)
+      px = e.clientX
+      py = e.clientY
+      pointerDirty = true
     })
     pill.addEventListener('pointerleave', () => {
       target = null
+      pointerDirty = false
     })
   })
 </script>

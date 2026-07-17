@@ -11,7 +11,7 @@ const SKILLS = [
   { id: 'networks', inline: 'network', color: '#0d6efd', cat: 'cyber' },
   { id: 'kali', icon: 'kali.svg', color: '#6BA3C4', cat: 'cyber', scale: 1.25 },
   { id: 'wireshark', icon: 'wireshark.svg', color: '#4AA8E0', cat: 'cyber' },
-  { id: 'maltego', icon: 'maltego.png', color: '#FFB30F', cat: 'cyber' },
+  { id: 'maltego', icon: 'maltego.webp', color: '#FFB30F', cat: 'cyber' },
   { id: 'trellix', icon: 'trellix.svg', color: '#00A5FF', cat: 'cyber' },
   { id: 'crowdstrike', icon: 'crowdstrike.svg', color: '#FC0000', cat: 'cyber' },
   { id: 'automox', icon: 'automox.svg', color: '#009CC9', cat: 'cyber' },
@@ -46,7 +46,7 @@ const SKILLS = [
   { id: 'jenkins', icon: 'jenkins.svg', color: '#E8807C', cat: 'tools', detail: true, scale: 1.4 },
   { id: 'figma', icon: 'figma.svg', color: '#A259FF', cat: 'tools', detail: true, scale: 1.2 },
   { id: 'virtualbox', icon: 'virtualbox.svg', color: '#2F6FE0', cat: 'tools' },
-  { id: 'vmware', icon: 'vmware.png', color: '#5BA7DC', cat: 'tools', detail: true },
+  { id: 'vmware', icon: 'vmware.webp', color: '#5BA7DC', cat: 'tools', detail: true },
   { id: 'vscode', icon: 'vscode.svg', color: '#3EA7E1', cat: 'tools' },
   { id: 'claude', icon: 'claude.svg', color: '#D97757', cat: 'tools' },
   { id: 'chatgpt', icon: 'chatgpt.svg', color: '#74AA9C', cat: 'tools' },
@@ -63,6 +63,17 @@ const INLINE_ICONS = {
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 20h16"/><rect x="5.5" y="10" width="3.4" height="7" rx="0.6"/><rect x="10.3" y="5.5" width="3.4" height="11.5" rx="0.6"/><rect x="15.1" y="12.5" width="3.4" height="4.5" rx="0.6"/></svg>',
   code:
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="m8 8-4.5 4L8 16"/><path d="m16 8 4.5 4L16 16"/><path d="M13.4 5 10.6 19"/></svg>',
+  lock:
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M7.4 10V7.7a4.6 4.6 0 0 1 9.2 0V10"/><rect x="4.6" y="10" width="14.8" height="10.6" rx="2.6"/><path d="M8.6 13.2v4.4" stroke-width="1.4"/><ellipse cx="12" cy="15.4" rx="1.5" ry="2.2" stroke-width="1.4"/><path d="M15.4 13.2v4.4" stroke-width="1.4"/></svg>',
+  wrench:
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14.7 6.3a4.2 4.2 0 0 0-5.6 5.1L4 16.5a2 2 0 1 0 2.8 2.8l5.1-5.1a4.2 4.2 0 0 0 5.1-5.6L14.2 11l-2.1-2.1Z"/></svg>',
+}
+
+const CAT_META = {
+  cyber: { icon: 'lock', color: '#0d6efd' },
+  dev: { icon: 'code', color: '#22c55e' },
+  aidata: { icon: 'chart', color: '#FFB30F' },
+  tools: { icon: 'wrench', color: '#8b5cf6' },
 }
 ---
 
@@ -107,6 +118,26 @@ const INLINE_ICONS = {
         </svg>
         <i class="corner corner--tl" aria-hidden="true"></i><i class="corner corner--tr" aria-hidden="true"></i>
         <i class="corner corner--bl" aria-hidden="true"></i><i class="corner corner--br" aria-hidden="true"></i>
+
+        <div class="skills__cats">
+          {
+            ZONE_KEYS.map((key) => (
+              <button
+                class="skill-cat"
+                type="button"
+                data-cat={key}
+                aria-expanded="false"
+                aria-label={skills.filters[key]}
+                data-i18n-aria={`skills.filters.${key}`}
+                style={`--skill-color:${CAT_META[key].color}`}
+              >
+                <span class="skill-cat__icon" aria-hidden="true">
+                  <Fragment set:html={INLINE_ICONS[CAT_META[key].icon]} />
+                </span>
+              </button>
+            ))
+          }
+        </div>
 
         <div class="skills__stage" id="skills-stage">
           <svg class="skills__net" id="skills-net" aria-hidden="true"></svg>
@@ -159,6 +190,7 @@ const INLINE_ICONS = {
               </div>
             ))
           }
+          <div class="skills__detail" hidden aria-live="polite"></div>
           {
             ZONE_KEYS.map((key) => (
               <span class="zone-label" data-zone={key}>
@@ -182,6 +214,132 @@ const INLINE_ICONS = {
     </div>
   </div>
 </section>
+
+<style is:global>
+  .skills__detail {
+    display: none;
+  }
+
+  .skills__cats {
+    display: none;
+  }
+
+  @media (max-width: 760px) {
+    #skills .skills__filter {
+      display: none;
+    }
+
+    #skills .skills__cats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.55rem;
+      padding: 1.3rem 0.9rem 0;
+    }
+
+    #skills .skill-cat {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.7em 0.2em;
+      background: none;
+      border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: border-color 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    #skills .skill-cat__icon {
+      display: flex;
+      color: var(--skill-color);
+      filter: drop-shadow(0 0 5px color-mix(in srgb, var(--skill-color) 45%, transparent));
+    }
+
+    #skills .skill-cat__icon svg {
+      width: 2.2rem;
+      height: 2.2rem;
+    }
+
+    #skills .skill-cat[aria-expanded='true'] {
+      border-color: color-mix(in srgb, var(--skill-color) 55%, transparent);
+      background: color-mix(in srgb, var(--panel-deep) 65%, transparent);
+      box-shadow: 0 0 14px color-mix(in srgb, var(--skill-color) 18%, transparent);
+    }
+
+    #skills .skill-item.is-off {
+      display: none;
+    }
+
+    #skills .skills__stage .skill-core:hover,
+    #skills .skills__stage .skill-core:focus-visible,
+    #skills .skills__stage .skill-core.is-active {
+      transform: none;
+    }
+
+    #skills.is-visible .skills__stage .skill-core {
+      animation-duration: 0.55s;
+      animation-delay: calc(var(--mob-order, 0) * 0.07s);
+    }
+
+    :root[data-theme='light'] #skills .skill-cat {
+      border-color: color-mix(in srgb, var(--ink-soft) 35%, transparent);
+    }
+
+    :root[data-theme='light'] #skills .skill-cat__icon {
+      color: var(--ink-2);
+      filter: none;
+    }
+
+    :root[data-theme='light'] #skills .skill-cat[aria-expanded='true'] {
+      border-color: var(--ink-soft);
+      background: color-mix(in srgb, var(--ink-soft) 8%, transparent);
+      box-shadow: none;
+    }
+
+    #skills .skills__detail:not([hidden]) {
+      display: block;
+      flex-basis: 100%;
+      padding: 0.6em 0.85em;
+      border: 1px solid color-mix(in srgb, var(--skill-color, var(--border)) 45%, transparent);
+      border-left: 3px solid var(--skill-color, var(--border));
+      border-radius: 10px;
+      background: color-mix(in srgb, var(--panel-deep) 65%, transparent);
+      font-family: var(--font-mono);
+      font-size: 0.76rem;
+      line-height: 1.5;
+      color: var(--muted);
+      text-align: left;
+      animation: skills-detail-in 0.3s ease;
+    }
+
+    #skills .skills__detail b {
+      color: var(--text);
+      font-weight: 700;
+    }
+
+    #skills .skills__detail b::before {
+      content: '> ';
+      color: var(--skill-color, var(--accent));
+    }
+
+    @keyframes skills-detail-in {
+      from {
+        opacity: 0;
+        transform: translateY(-4px);
+      }
+    }
+
+    :root[data-theme='light'] #skills .skills__detail:not([hidden]) {
+      border-color: color-mix(in srgb, var(--ink-soft) 35%, transparent);
+      border-left-color: var(--ink-soft);
+      background: color-mix(in srgb, var(--ink-soft) 6%, transparent);
+      box-shadow: none;
+    }
+
+    :root[data-theme='light'] #skills .skills__detail b::before {
+      color: var(--ink-soft);
+    }
+  }
+</style>
 
 <script>
   const section = document.getElementById('skills')
@@ -556,6 +714,7 @@ const INLINE_ICONS = {
 
   let typeToken = 0
   function typeReadout(core) {
+    if (compact.matches) return
     const token = ++typeToken
     const lang = document.documentElement.lang === 'es' ? 'es' : 'en'
     const plain = lang === 'es' ? core.dataset.lineEs : core.dataset.lineEn
@@ -575,6 +734,35 @@ const INLINE_ICONS = {
       else readout.innerHTML = html
     }
     step()
+  }
+
+  const detailEl = stage.querySelector('.skills__detail')
+
+  function showDetail(n) {
+    const lang = document.documentElement.lang === 'es' ? 'es' : 'en'
+    const plain = lang === 'es' ? n.core.dataset.lineEs : n.core.dataset.lineEn
+    const sep = plain.indexOf(' — ')
+    detailEl.hidden = true
+    detailEl.innerHTML = sep === -1 ? `<b>${plain}</b>` : `<b>${plain.slice(0, sep)}</b>${plain.slice(sep)}`
+    detailEl.style.setProperty('--skill-color', n.item.style.getPropertyValue('--skill-color'))
+    const rowTop = n.item.offsetTop
+    let anchor = n.item
+    let sib = anchor.nextElementSibling
+    while (sib) {
+      if (sib === detailEl || sib.offsetParent === null) {
+        sib = sib.nextElementSibling
+        continue
+      }
+      if (!sib.classList.contains('skill-item') || sib.offsetTop !== rowTop) break
+      anchor = sib
+      sib = sib.nextElementSibling
+    }
+    anchor.insertAdjacentElement('afterend', detailEl)
+    detailEl.hidden = false
+  }
+
+  function hideDetail() {
+    detailEl.hidden = true
   }
 
   let selected = -1
@@ -603,6 +791,23 @@ const INLINE_ICONS = {
         n.core.setAttribute('aria-expanded', String(open))
         applyFilter()
         buildEdges()
+        if (compact.matches) {
+          stage.querySelectorAll('.is-active').forEach((el) => el.classList.remove('is-active'))
+          hideDetail()
+          selected = -1
+          return
+        }
+      }
+      if (compact.matches && !n.groupId) {
+        const wasActive = n.core.classList.contains('is-active')
+        stage.querySelectorAll('.is-active').forEach((el) => el.classList.remove('is-active'))
+        if (wasActive) {
+          hideDetail()
+        } else {
+          n.core.classList.add('is-active')
+          showDetail(n)
+        }
+        return
       }
       const wasActive = n.core.classList.contains('is-active')
       stage.querySelectorAll('.is-active').forEach((el) => el.classList.remove('is-active'))
@@ -625,6 +830,29 @@ const INLINE_ICONS = {
       }
     })
   })
+
+  const catButtons = [...section.querySelectorAll('.skill-cat')]
+  const applyCats = () => {
+    const open = stage.dataset.open || ''
+    let order = 0
+    nodes.forEach((n) => {
+      const off = compact.matches && n.cat !== open
+      n.item.classList.toggle('is-off', off)
+      if (!off) n.item.style.setProperty('--mob-order', String(order++))
+    })
+    catButtons.forEach((b) => b.setAttribute('aria-expanded', String(compact.matches && b.dataset.cat === open)))
+  }
+  catButtons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      stage.dataset.open = stage.dataset.open === btn.dataset.cat ? '' : btn.dataset.cat
+      stage.querySelectorAll('.is-active').forEach((el) => el.classList.remove('is-active'))
+      hideDetail()
+      selected = -1
+      applyCats()
+    })
+  })
+  compact.addEventListener('change', applyCats)
+  applyCats()
 
   function init() {
     section.classList.remove('is-ready')

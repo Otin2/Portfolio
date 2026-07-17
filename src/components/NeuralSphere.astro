@@ -4,7 +4,7 @@
 </div>
 
 <script>
-  import * as THREE from 'three'
+  import { bindAnimationLifecycle } from '../scripts/visibility.js'
 
   const CONFIG = {
     PARTICLE_COUNT: 1200,
@@ -22,7 +22,6 @@
     REPEL_RADIUS: 3.4,
     REPEL_STRENGTH: 0.6,
     EASE_HOME: 0.018,
-    TILT_AMOUNT: 0,
     DRAG_SENSITIVITY: 0.006,
     DRAG_DAMPING: 0.945,
     GOLD_RATIO: 0.08,
@@ -30,15 +29,7 @@
     GOLD_SIZE: 1.45,
   }
 
-  const isMobile = window.matchMedia('(max-width: 720px)').matches
-  if (isMobile) {
-    Object.assign(CONFIG, {
-      PARTICLE_COUNT: 550,
-      MAX_LINKS_TOTAL: 1400,
-      MAX_LINKS_PER_PARTICLE: 5,
-      LINK_DISTANCE: 2.3,
-    })
-  }
+  const mobileQuery = window.matchMedia('(max-width: 720px)')
 
   const wrapper = document.querySelector('.neural')
   const canvas = document.querySelector('.neural__canvas')
@@ -47,25 +38,31 @@
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     let initialized = false
 
-    const cssColor = (name) => {
-      const raw = getComputedStyle(document.documentElement).getPropertyValue(name).trim()
-      return new THREE.Color(raw || '#0d6efd')
-    }
-
-    const init = () => {
+    const init = async () => {
       initialized = true
 
+      let THREE
+      try {
+        THREE = await import('../scripts/three-slim.js')
+      } catch {
+        initialized = false
+        return
+      }
+
+      const cssColor = (name) => {
+        const raw = getComputedStyle(document.documentElement).getPropertyValue(name).trim()
+        return new THREE.Color(raw || '#0d6efd')
+      }
+
       const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true })
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2))
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 
       const scene = new THREE.Scene()
       const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100)
       camera.position.z = 26
 
-      const pivot = new THREE.Group()
       const group = new THREE.Group()
-      pivot.add(group)
-      scene.add(pivot)
+      scene.add(group)
 
       const N = CONFIG.PARTICLE_COUNT
       const pos = new Float32Array(N * 3)
@@ -492,8 +489,6 @@
       const rayP = new THREE.Vector3()
       const rayD = new THREE.Vector3()
       let mouseActive = false
-      let tiltX = 0
-      let tiltY = 0
 
       let userRotX = 0
       let userRotY = 0
@@ -517,8 +512,6 @@
         ndc.x = ((e.clientX - rect.left) / rect.width) * 2 - 1
         ndc.y = -(((e.clientY - rect.top) / rect.height) * 2 - 1)
         mouseActive = true
-        tiltX = ndc.y * -CONFIG.TILT_AMOUNT
-        tiltY = ndc.x * CONFIG.TILT_AMOUNT
         if (dragging) {
           const dx = e.clientX - lastX
           const dy = e.clientY - lastY
@@ -541,8 +534,6 @@
       canvas.addEventListener('pointercancel', endDrag)
       canvas.addEventListener('pointerleave', () => {
         mouseActive = false
-        tiltX = 0
-        tiltY = 0
         endDrag()
       })
 
@@ -595,9 +586,7 @@
           const s = 1 + Math.sin(t * CONFIG.PULSE_SPEED) * CONFIG.PULSE_AMOUNT
           group.scale.setScalar(s)
         }
-        pivot.rotation.x += (tiltX - pivot.rotation.x) * 0.05
-        pivot.rotation.y += (tiltY - pivot.rotation.y) * 0.05
-        pivot.updateMatrixWorld()
+        group.updateMatrixWorld()
 
         // El rayo del cursor pasa en una dimension pero su repulsion es 3d repeliendo las particulas que no estan en su misma dimension
         let repel = false
@@ -681,17 +670,21 @@
         cancelAnimationFrame(rafId)
       }
 
-      new IntersectionObserver(([entry]) => (entry.isIntersecting ? start() : stop())).observe(wrapper)
-      document.addEventListener('visibilitychange', () => {
-        if (document.hidden) stop()
-        else if (wrapper.clientWidth) start()
-      })
+      bindAnimationLifecycle(start, stop, wrapper)
     }
 
     const tryInit = () => {
-      if (!initialized && wrapper.clientWidth > 0) init()
+      if (!initialized && !mobileQuery.matches && wrapper.clientWidth > 0) init()
     }
     tryInit()
-    window.matchMedia('(max-width: 720px)').addEventListener('change', tryInit)
+    mobileQuery.addEventListener('change', tryInit)
   }
 </script>
+
+<style>
+  @media (max-width: 720px) {
+    .neural {
+      display: none;
+    }
+  }
+</style>

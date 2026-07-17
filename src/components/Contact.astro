@@ -10,14 +10,14 @@ const beamPath = (i) =>
   `${152 + 7 * i} ${343 - 8 * i}C${616 + 7 * i} ${470 - 8 * i} ${684 + 7 * i} ${875 - 8 * i} ` +
   `${684 + 7 * i} ${875 - 8 * i}`
 
-const beams = Array.from({ length: 62 }, (_, i) => ({
-  d: beamPath(i - 12),
+const beams = Array.from({ length: 14 }, (_, i) => ({
+  d: beamPath(i * 4 - 10),
   dur: (Math.random() * 10 + 10).toFixed(2),
   delay: (Math.random() * 10).toFixed(2),
   y2End: (93 + Math.random() * 8).toFixed(2),
 }))
 
-const staticBeams = Array.from({ length: 91 }, (_, i) => beamPath(i - 25)).join('')
+const staticOffsets = Array.from({ length: 90 }, (_, i) => i + 1)
 ---
 
 <section id="contacto" class="section section--contact reveal">
@@ -25,7 +25,10 @@ const staticBeams = Array.from({ length: 91 }, (_, i) => beamPath(i - 25)).join(
     <div class="contact-card">
       <div class="contact-beams" aria-hidden="true">
         <svg width="100%" height="100%" viewBox="0 0 696 316" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d={staticBeams} class="contact-beams__static" stroke-width="0.5"></path>
+          <g class="contact-beams__static" stroke-width="0.5">
+            <path id="beam-base" d={beamPath(-25)}></path>
+            {staticOffsets.map((k) => <use href="#beam-base" x={7 * k} y={-8 * k} />)}
+          </g>
           <g class="contact-beams__animated">
             {beams.map((beam, i) => (
               <path d={beam.d} stroke={`url(#beam-grad-${i})`} stroke-opacity="0.4" stroke-width="1"></path>
@@ -147,10 +150,15 @@ const staticBeams = Array.from({ length: 91 }, (_, i) => beamPath(i - 25)).join(
               data-i18n-placeholder="contact.form.messagePh"></textarea>
           </div>
           <input type="checkbox" name="botcheck" class="contact-form__botcheck" tabindex="-1" autocomplete="off" aria-hidden="true" />
-          <button class="btn btn--primary contact-form__send" type="submit" data-i18n="contact.form.send">
-            {contact.form.send}
+          <button class="btn btn--primary contact-form__send" type="submit">
+            <span class="contact-form__spinner" aria-hidden="true"></span>
+            <span class="contact-form__send-label" data-i18n="contact.form.send">{contact.form.send}</span>
           </button>
-          <p class="contact-form__status" role="status" hidden></p>
+          <p class="contact-form__status" role="status" hidden>
+            <svg class="contact-form__status-icon contact-form__status-icon--ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m8.5 12.5 2.5 2.5 4.5-5.5"/></svg>
+            <svg class="contact-form__status-icon contact-form__status-icon--err" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+            <span class="contact-form__status-text"></span>
+          </p>
         </form>
       </div>
     </div>
@@ -163,7 +171,9 @@ const staticBeams = Array.from({ length: 91 }, (_, i) => beamPath(i - 25)).join(
   // Envio del formulario con EmailJS
   const form = document.querySelector('.contact-form')
   const status = form?.querySelector('.contact-form__status')
+  const statusText = status?.querySelector('.contact-form__status-text')
   const sendBtn = form?.querySelector('.contact-form__send')
+  const sendLabel = sendBtn?.querySelector('.contact-form__send-label')
 
   const formText = (key) => {
     const lang = document.documentElement.lang || defaultLang
@@ -172,20 +182,50 @@ const staticBeams = Array.from({ length: 91 }, (_, i) => beamPath(i - 25)).join(
   }
 
   const showStatus = (key, kind) => {
-    if (!status) return
-    status.textContent = formText(key)
+    if (!status || !statusText) return
+    statusText.textContent = formText(key)
     status.hidden = false
+    status.classList.remove('contact-form__status--in')
+    void status.offsetWidth
+    status.classList.add('contact-form__status--in')
     status.classList.toggle('contact-form__status--error', kind === 'error')
+  }
+
+  const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+  const markInvalid = (input, key) => {
+    showStatus(key, 'error')
+    input.classList.add('contact-form__field-error')
+    input.focus()
+    input.addEventListener(
+      'input',
+      () => input.classList.remove('contact-form__field-error'),
+      { once: true }
+    )
+  }
+
+  const validate = (data) => {
+    const checks = [
+      ['name', data.name.trim(), 'errName'],
+      ['email', data.email.trim(), 'errEmail'],
+      ['email', !data.email.trim() || emailRe.test(data.email.trim()), 'errEmailInvalid'],
+      ['subject', data.subject.trim(), 'errSubject'],
+      ['message', data.message.trim(), 'errMessage'],
+    ]
+    for (const [name, ok, key] of checks) {
+      if (!ok) {
+        markInvalid(form.elements[name], key)
+        return false
+      }
+    }
+    return true
   }
 
   form?.addEventListener('submit', async (e) => {
     e.preventDefault()
 
     const data = Object.fromEntries(new FormData(form))
-    if (!data.name || !data.email || !data.subject || !data.message) {
-      showStatus('missing', 'error')
-      return
-    }
+    if (!validate(data)) return
 
     const { serviceId, templateId, publicKey } = site.emailjs
     if (!serviceId || !templateId || !publicKey) {
@@ -195,7 +235,8 @@ const staticBeams = Array.from({ length: 91 }, (_, i) => beamPath(i - 25)).join(
     }
 
     sendBtn.disabled = true
-    sendBtn.textContent = formText('sending')
+    sendBtn.classList.add('contact-form__send--loading')
+    sendLabel.textContent = formText('sending')
     status.hidden = true
     try {
       const res = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
@@ -219,15 +260,135 @@ const staticBeams = Array.from({ length: 91 }, (_, i) => beamPath(i - 25)).join(
       showStatus('error', 'error')
     } finally {
       sendBtn.disabled = false
-      sendBtn.textContent = formText('send')
+      sendBtn.classList.remove('contact-form__send--loading')
+      sendLabel.textContent = formText('send')
     }
   })
 
   // En movil la tarjeta es alta y el dibujo se amplia
   const beamsSvg = document.querySelector('.contact-beams svg')
   const beamsMq = window.matchMedia('(max-width: 640px)')
-  const setBeamsAspect = () =>
+  const setBeamsAspect = () => {
     beamsSvg?.setAttribute('preserveAspectRatio', beamsMq.matches ? 'xMidYMid slice' : 'xMidYMid meet')
+  }
   setBeamsAspect()
   beamsMq.addEventListener('change', setBeamsAspect)
+  if (beamsMq.matches) {
+    beamsSvg?.querySelector('.contact-beams__animated')?.remove()
+    beamsSvg?.querySelector('defs')?.remove()
+  }
 </script>
+
+<style>
+  .contact-form {
+    --status-ok: #22c55e;
+    --status-err: #ef4444;
+  }
+
+  :global(:root[data-theme='light']) .contact-form {
+    --status-ok: #15803d;
+    --status-err: #b91c1c;
+  }
+
+  .contact-form__field input.contact-form__field-error,
+  .contact-form__field textarea.contact-form__field-error {
+    border-color: color-mix(in srgb, var(--status-err, #ef4444) 70%, transparent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--status-err, #ef4444) 12%, transparent);
+  }
+
+  .contact-form__send {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+  }
+
+  .contact-form__spinner {
+    display: none;
+    width: 1em;
+    height: 1em;
+    flex: none;
+    border: 2px solid color-mix(in srgb, currentColor 30%, transparent);
+    border-top-color: currentColor;
+    border-radius: 50%;
+    animation: contact-spin 0.7s linear infinite;
+  }
+
+  .contact-form__send--loading .contact-form__spinner {
+    display: inline-block;
+  }
+
+  @keyframes contact-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .contact-form .contact-form__status {
+    --status-color: var(--status-ok);
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    margin: 0;
+    padding: 0.65rem 0.85rem;
+    border: 1px solid color-mix(in srgb, var(--status-color) 35%, var(--border));
+    border-left: 3px solid var(--status-color);
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--status-color) 9%, transparent);
+    font-family: var(--font-mono);
+    font-size: 0.84rem;
+    line-height: 1.45;
+    color: var(--status-color);
+  }
+
+  .contact-form .contact-form__status--error {
+    --status-color: var(--status-err);
+  }
+
+  .contact-form__status-icon {
+    width: 1.05rem;
+    height: 1.05rem;
+    flex: none;
+    margin-top: 0.1em;
+  }
+
+  .contact-form__status-icon--err,
+  .contact-form__status--error .contact-form__status-icon--ok {
+    display: none;
+  }
+
+  .contact-form__status--error .contact-form__status-icon--err {
+    display: block;
+  }
+
+  .contact-form__status--in {
+    animation: contact-status-in 0.3s ease both;
+  }
+
+  @keyframes contact-status-in {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .contact-beams .contact-beams__static {
+      stroke-opacity: 0.2;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .contact-form__status--in {
+      animation: none;
+    }
+
+    .contact-form__spinner {
+      animation-duration: 1.6s;
+    }
+  }
+</style>

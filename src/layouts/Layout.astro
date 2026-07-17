@@ -6,6 +6,24 @@ const {
   title = 'Portfolio - RolandoRoller',
   description = 'Portafolio de Rolando Roller',
 } = Astro.props
+
+const base = import.meta.env.BASE_URL
+const fontFaces = `
+@font-face {
+  font-family: 'Sora';
+  src: url('${base}fonts/sora-latin.woff2') format('woff2');
+  font-weight: 400 800;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('${base}fonts/jetbrains-mono-latin.woff2') format('woff2');
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+`
 ---
 
 <!doctype html>
@@ -13,44 +31,47 @@ const {
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="color-scheme" content="dark" />
+    <meta name="color-scheme" content="light" />
     <meta name="description" content={description} />
-    <meta name="theme-color" content="#060B18" />
-    <link rel="icon" href={`${import.meta.env.BASE_URL}favicon.ico`} sizes="any" />
+    <meta name="theme-color" content="#F6F4EE" />
+    <link rel="icon" type="image/svg+xml" href={`${import.meta.env.BASE_URL}favicon.svg`} />
     <title>{title}</title>
     {/* Evitar el destello blanco al recargar */}
     <style is:inline>
       html {
-        background: #060b18;
-      }
-      html[data-theme='light'] {
         background: #f6f4ee;
       }
+      html[data-theme='dark'] {
+        background: #060b18;
+      }
     </style>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="font" type="font/woff2" href={`${base}fonts/sora-latin.woff2`} crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap"
-      rel="stylesheet"
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      href={`${base}fonts/jetbrains-mono-latin.woff2`}
+      crossorigin
     />
+    <style is:inline set:html={fontFaces}></style>
 
-    {/* Aplica el tema y el idioma guardados */}
+    {/* Al recargar vuelve arriba sin restaurar posición ni ancla */}
     <script is:inline define:vars={{ defaultLang }}>
-      const theme = localStorage.getItem('theme') || 'dark'
-      document.documentElement.dataset.theme = theme
-      document
-        .querySelector('meta[name="theme-color"]')
-        ?.setAttribute('content', theme === 'light' ? '#F6F4EE' : '#060B18')
-      const lang = localStorage.getItem('lang') || defaultLang
-      document.documentElement.lang = lang
+      document.documentElement.dataset.theme = 'light'
+      document.documentElement.lang = defaultLang
+      if ('scrollRestoration' in history) history.scrollRestoration = 'manual'
+      if (location.hash) history.replaceState(null, '', location.pathname + location.search)
+      window.addEventListener('pageshow', () => window.scrollTo(0, 0))
     </script>
   </head>
   <body>
     <slot />
 
     <script define:vars={{ translations, defaultLang }}>
+      const navbar = document.getElementById('navbar')
       const syncScrolled = () => {
         document.documentElement.classList.toggle('is-scrolled', window.scrollY > 8)
+        navbar?.classList.toggle('navbar--scrolled', window.scrollY > 40)
       }
       window.addEventListener('scroll', syncScrolled, { passive: true })
       syncScrolled()
@@ -89,12 +110,15 @@ const {
           const value = getPath(dict, el.getAttribute('data-i18n-placeholder'))
           if (typeof value === 'string') el.setAttribute('placeholder', value)
         })
+        document.querySelectorAll('[data-i18n-aria]').forEach((el) => {
+          const value = getPath(dict, el.getAttribute('data-i18n-aria'))
+          if (typeof value === 'string') el.setAttribute('aria-label', value)
+        })
         const code = document.getElementById('lang-code')
         if (code) code.textContent = lang.toUpperCase()
       }
 
-      let currentLang = localStorage.getItem('lang') || defaultLang
-      if (currentLang !== defaultLang) applyLang(currentLang)
+      let currentLang = defaultLang
 
       // Fija el ancho de la pildora del menu al del idioma mas ancho
       const fixPillWidth = () => {
@@ -118,7 +142,6 @@ const {
       const langToggle = document.getElementById('lang-toggle')
       langToggle?.addEventListener('click', () => {
         currentLang = currentLang === 'en' ? 'es' : 'en'
-        localStorage.setItem('lang', currentLang)
         applyLang(currentLang)
       })
 
@@ -126,10 +149,11 @@ const {
       themeToggle?.addEventListener('click', () => {
         const next = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light'
         document.documentElement.dataset.theme = next
-        localStorage.setItem('theme', next)
         document
           .querySelector('meta[name="theme-color"]')
           ?.setAttribute('content', next === 'light' ? '#F6F4EE' : '#060B18')
+        document.querySelector('meta[name="color-scheme"]')?.setAttribute('content', next)
+        fixPillWidth()
       })
     </script>
   </body>

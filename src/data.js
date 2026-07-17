@@ -6,7 +6,7 @@ export const site = {
   name: 'Rolando Roller',
   logo: { accent: 'R', rest: 'Roller' },
 
-  photo: '/perfil.webp',
+  photo: true,
 
   email: 'rolanroller@hotmail.com',
   phone: '+51 939 322 937',
@@ -25,7 +25,6 @@ export const site = {
   profile: {
     location: 'Lima, PE',
     focus: 'Sec / Dev / Data',
-    lang: 'es / en',
   },
 }
 
@@ -58,7 +57,7 @@ export const translations = {
         "I'm currently a student working on my thesis, which applies machine learning to classify the level of tennis players, and seeking job opportunities where I can apply my knowledge, continue learning, and grow professionally.",
       ],
       card: {
-        photoAlt: 'Professional photo of Rolando Roller',
+        photoAlt: 'Rolando Roller',
         role: 'Cybersecurity / Development / Data',
         status: 'Available',
       },
@@ -255,10 +254,15 @@ export const translations = {
         message: 'Message',
         messagePh: 'Your message here...',
         send: 'Send message',
-        sending: 'Sending...',
+        sending: 'Sending…',
         success: 'Message sent! I will get back to you soon.',
         error: 'Something went wrong. Please try again or email me directly.',
         missing: 'Please fill in all the fields.',
+        errName: 'Please enter your name.',
+        errEmail: 'Please enter your email.',
+        errEmailInvalid: 'Please enter a valid email address.',
+        errSubject: 'Please enter a subject.',
+        errMessage: 'Please write a message.',
       },
     },
 
@@ -298,7 +302,7 @@ export const translations = {
         'Actualmente estudio y desarrollo mi tesis, que aplica machine learning para clasificar el nivel de jugadores de tenis, en busca de oportunidades laborales donde pueda aplicar mis conocimientos, seguir aprendiendo y crecer profesionalmente.',
       ],
       card: {
-        photoAlt: 'Foto profesional de Rolando Roller',
+        photoAlt: 'Rolando Roller',
         role: 'Ciberseguridad / Desarrollo / Datos',
         status: 'Disponible',
       },
@@ -495,10 +499,15 @@ export const translations = {
         message: 'Mensaje',
         messagePh: 'Tu mensaje aquí...',
         send: 'Enviar mensaje',
-        sending: 'Enviando...',
+        sending: 'Enviando…',
         success: '¡Mensaje enviado! Te responderé pronto.',
         error: 'Algo salió mal. Inténtalo de nuevo o escríbeme directamente.',
         missing: 'Por favor completa todos los campos.',
+        errName: 'Escribe tu nombre.',
+        errEmail: 'Escribe tu correo.',
+        errEmailInvalid: 'Introduce un email válido.',
+        errSubject: 'Escribe un asunto.',
+        errMessage: 'Escribe un mensaje.',
       },
     },
 

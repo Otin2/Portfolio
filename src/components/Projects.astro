@@ -18,13 +18,11 @@ const assetBase = import.meta.env.BASE_URL.replace(/\/$/, '')
   <div class="projects__carousel">
     <div class="projects__track">
       {
-        [0, 1].map((copy) =>
-          projects.items.map((project, i) => (
+        projects.items.map((project, i) => (
             <article
               class="project-card"
               data-command={`cat ${project.file}`}
               data-project={i}
-              aria-hidden={copy === 1 ? 'true' : undefined}
             >
               <div class="project-card__bar">
                 <span class="terminal__dot terminal__dot--red" aria-hidden="true" />
@@ -40,11 +38,9 @@ const assetBase = import.meta.env.BASE_URL.replace(/\/$/, '')
               </div>
 
               <div class="project-card__body">
-                {copy === 0 && (
-                  <button class="sr-only project-card__open" type="button" aria-haspopup="dialog">
-                    {project.title}
-                  </button>
-                )}
+                <button class="sr-only project-card__open" type="button" aria-haspopup="dialog">
+                  {project.title}
+                </button>
                 <p class="project-card__prompt" aria-hidden="true">
                   <span class="term-user">rroller@dev</span>
                   <span class="term-symbol">:~$</span>{' '}
@@ -75,9 +71,6 @@ const assetBase = import.meta.env.BASE_URL.replace(/\/$/, '')
                   <ul class="project-card__stack" aria-label="Stack tecnológico">
                     {project.stack.map((tech) => (
                       <li>
-                        <span class="project-card__hash" aria-hidden="true">
-                          #
-                        </span>
                         {tech}
                       </li>
                     ))}
@@ -89,8 +82,7 @@ const assetBase = import.meta.env.BASE_URL.replace(/\/$/, '')
                 </div>
               </div>
             </article>
-          )),
-        )
+          ))
       }
     </div>
   </div>
@@ -139,9 +131,6 @@ const assetBase = import.meta.env.BASE_URL.replace(/\/$/, '')
             <ul class="project-card__stack" aria-label="Stack tecnológico">
               {project.stack.map((tech) => (
                 <li>
-                  <span class="project-card__hash" aria-hidden="true">
-                    #
-                  </span>
                   {tech}
                 </li>
               ))}
@@ -158,10 +147,23 @@ const assetBase = import.meta.env.BASE_URL.replace(/\/$/, '')
 </section>
 
 <script>
+  import { bindAnimationLifecycle } from '../scripts/visibility.js'
+
+  const projectsTrack = document.querySelector<HTMLElement>('.projects__track')
+  if (projectsTrack) {
+    Array.from(projectsTrack.children).forEach((el) => {
+      const dup = el.cloneNode(true) as HTMLElement
+      dup.setAttribute('aria-hidden', 'true')
+      dup.querySelector('.project-card__open')?.remove()
+      projectsTrack.appendChild(dup)
+    })
+  }
+
   // Teclea el comando letra por letra cuando la tarjeta entra en el viewport
   const TYPE_SPEED_MS = 25
   const cards = document.querySelectorAll<HTMLElement>('.project-card')
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  const pendingType: HTMLElement[] = []
 
   const finish = (card: HTMLElement) => {
     card.querySelector('.project-card__cmd')!.textContent = card.dataset.command ?? ''
@@ -193,7 +195,9 @@ const assetBase = import.meta.env.BASE_URL.replace(/\/$/, '')
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            typeCommand(entry.target as HTMLElement)
+            const card = entry.target as HTMLElement
+            if (document.querySelector('.projects__carousel--dragging')) pendingType.push(card)
+            else typeCommand(card)
             observer.unobserve(entry.target)
           }
         })
@@ -247,11 +251,16 @@ const assetBase = import.meta.env.BASE_URL.replace(/\/$/, '')
       dragDist += Math.abs(dx)
       offset -= dx * CAROUSEL.DRAG_GAIN
       velocity = -dx * CAROUSEL.DRAG_GAIN
+      if (loopWidth > 0) {
+        offset = ((offset % loopWidth) + loopWidth) % loopWidth
+      }
+      track.style.transform = `translate3d(${-offset}px, 0, 0)`
     })
 
     const endDrag = () => {
       dragging = false
       carousel.classList.remove('projects__carousel--dragging')
+      pendingType.splice(0).forEach((card) => typeCommand(card))
     }
     window.addEventListener('pointerup', endDrag)
     window.addEventListener('pointercancel', endDrag)
@@ -268,15 +277,18 @@ const assetBase = import.meta.env.BASE_URL.replace(/\/$/, '')
       true,
     )
 
-    // Bucle de animacion pausado para optimización
+    // Bucle de animacion pausado
     let running = false
     let rafId = 0
+    let lastT = 0
 
-    const frame = () => {
+    const frame = (now: number) => {
       rafId = requestAnimationFrame(frame)
+      const dt = lastT ? Math.min((now - lastT) / 16.67, 3) : 1
+      lastT = now
       if (!dragging) {
-        offset += (reduced ? 0 : CAROUSEL.BASE_SPEED) + velocity
-        velocity *= CAROUSEL.DAMPING
+        offset += ((reduced ? 0 : CAROUSEL.BASE_SPEED) + velocity) * dt
+        velocity *= CAROUSEL.DAMPING ** dt
       }
       if (loopWidth > 0) {
         offset = ((offset % loopWidth) + loopWidth) % loopWidth
@@ -287,6 +299,7 @@ const assetBase = import.meta.env.BASE_URL.replace(/\/$/, '')
     const start = () => {
       if (!running) {
         running = true
+        lastT = 0
         rafId = requestAnimationFrame(frame)
       }
     }
@@ -295,11 +308,7 @@ const assetBase = import.meta.env.BASE_URL.replace(/\/$/, '')
       cancelAnimationFrame(rafId)
     }
 
-    new IntersectionObserver(([entry]) => (entry.isIntersecting ? start() : stop())).observe(carousel)
-    document.addEventListener('visibilitychange', () => {
-      if (document.hidden) stop()
-      else start()
-    })
+    bindAnimationLifecycle(start, stop, carousel)
   }
 
   // Apertura y cierre de la ventana
