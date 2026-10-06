@@ -3,6 +3,8 @@ import { translations, defaultLang } from '../data.js'
 import NeuralSphere from './NeuralSphere.astro'
 
 const { hero } = translations[defaultLang]
+
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/')
 ---
 
 <section id="inicio" class="hero" aria-label="Introducción">
@@ -39,7 +41,14 @@ const { hero } = translations[defaultLang]
         <a class="btn btn--primary" href={hero.ctaPrimary.href} data-i18n="hero.ctaPrimary.label">
           {hero.ctaPrimary.label}
         </a>
-        <a class="btn btn--ghost" href={hero.ctaSecondary.href} download data-i18n="hero.ctaSecondary.label">
+        <a
+          class="btn btn--ghost"
+          href={`${base}${hero.ctaSecondary.href}`}
+          download
+          data-i18n="hero.ctaSecondary.label"
+          data-i18n-href="hero.ctaSecondary.href"
+          data-href-base={base}
+        >
           {hero.ctaSecondary.label}
         </a>
       </div>

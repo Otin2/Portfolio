@@ -66,79 +66,126 @@ const { about } = translations[defaultLang]
 <script>
   import { bindAnimationLifecycle } from '../scripts/visibility.js'
 
-  // Inclinación de la tarjeta y brillo holografico mediante CSS
+  // Volteo ligado al scroll, inclinación y brillo holografico de la tarjeta
   const scene = document.querySelector<HTMLElement>('.holo-card-scene')
   const card = scene?.querySelector<HTMLElement>('.holo-card')
+  const shine = card?.querySelector<HTMLElement>('.holo-card__shine')
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches
 
-  if (scene && card && !reducedMotion && matchMedia('(hover: hover)').matches) {
-    scene.addEventListener('mousemove', (e) => {
-      card.style.transition = ''
-      const r = card.getBoundingClientRect()
-      const x = (e.clientX - r.left) / r.width
-      const y = (e.clientY - r.top) / r.height
-      card.style.setProperty('--rx', `${((x - 0.5) * 12).toFixed(2)}deg`)
-      card.style.setProperty('--ry', `${((0.5 - y) * 10).toFixed(2)}deg`)
-      card.style.setProperty('--mx', `${(x * 100).toFixed(1)}%`)
-      card.style.setProperty('--my', `${(y * 100).toFixed(1)}%`)
-    })
-
-    scene.addEventListener('mouseleave', () => {
-      card.style.transition = 'transform 0.5s ease-out'
-      card.style.setProperty('--rx', '0deg')
-      card.style.setProperty('--ry', '0deg')
-      setTimeout(() => {
-        card.style.transition = ''
-      }, 500)
-    })
-  }
-
-  // Volteo ligado al scroll la tarjeta
   if (scene && card && !reducedMotion) {
     const FLIP_START = 0.68
     const DEAD_ZONE = 0.08
-    let target = 0
-    let current = 0
-    let raf = 0
+    const mobile = matchMedia('(max-width: 760px)')
+    const canHover = matchMedia('(hover: hover)').matches
 
-    const computeTarget = () => {
+    let flip = 0
+    let rx = 0
+    let ry = 0
+    let targetFlip = 0
+    let targetRx = 0
+    let targetRy = 0
+    let pointerX = 0
+    let pointerY = 0
+    let hovering = false
+    let active = false
+    let raf = 0
+    let lastT = 0
+    const written: Record<string, string> = {}
+
+    const write = (el: HTMLElement, prop: string, value: string) => {
+      const key = el === card ? prop : `shine${prop}`
+      if (written[key] === value) return
+      written[key] = value
+      el.style.setProperty(prop, value)
+    }
+
+    const measure = () => {
       const r = scene.getBoundingClientRect()
       const half = (innerHeight + r.height) / 2
       const p = Math.max(-1, Math.min(1, (r.top + r.height / 2 - innerHeight / 2) / half))
       const t = Math.min(1, Math.max(0, (Math.abs(p) - DEAD_ZONE) / (FLIP_START - DEAD_ZONE)))
-      target = Math.sign(p) * t * 180
+      targetFlip = Math.sign(p) * t * 180
+
+      if (hovering) {
+        const x = Math.min(1, Math.max(0, (pointerX - r.left) / r.width))
+        const y = Math.min(1, Math.max(0, (pointerY - r.top) / r.height))
+        targetRx = (x - 0.5) * 12
+        targetRy = (0.5 - y) * 10
+        if (shine) {
+          write(shine, '--sx', x.toFixed(3))
+          write(shine, '--sy', y.toFixed(3))
+        }
+      }
     }
 
-    const mobile = window.matchMedia('(max-width: 760px)')
-    let lastT = 0
+    const approach = (value: number, target: number, k: number, dt: number, eps: number) => {
+      const next = value + (target - value) * (1 - Math.exp(-k * dt))
+      return Math.abs(target - next) < eps ? target : next
+    }
+
+    const render = () => {
+      write(card, '--flip', `${flip.toFixed(2)}deg`)
+      write(card, '--flip-z', `${((Math.abs(flip) / 180) * -17.1).toFixed(2)}deg`)
+      write(card, '--rx', `${rx.toFixed(2)}deg`)
+      write(card, '--ry', `${ry.toFixed(2)}deg`)
+    }
 
     const tick = (now: number) => {
-      raf = requestAnimationFrame(tick)
       const dt = lastT ? Math.min((now - lastT) / 1000, 0.05) : 1 / 60
       lastT = now
-      computeTarget()
-      const k = mobile.matches ? 16 : 10
-      current += (target - current) * (1 - Math.exp(-k * dt))
-      if (Math.abs(target - current) < 0.02) current = target
-      card.style.setProperty('--flip', `${current.toFixed(2)}deg`)
-      card.style.setProperty('--flip-z', `${((Math.abs(current) / 180) * -17.1).toFixed(2)}deg`)
+      measure()
+      const kTilt = hovering ? 20 : 8
+      flip = approach(flip, targetFlip, mobile.matches ? 16 : 10, dt, 0.02)
+      rx = approach(rx, targetRx, kTilt, dt, 0.01)
+      ry = approach(ry, targetRy, kTilt, dt, 0.01)
+      render()
+
+      if (flip === targetFlip && rx === targetRx && ry === targetRy) {
+        raf = 0
+        lastT = 0
+        return
+      }
+      raf = requestAnimationFrame(tick)
+    }
+
+    const wake = () => {
+      if (active && !raf) raf = requestAnimationFrame(tick)
     }
 
     const start = () => {
-      if (!raf) {
-        lastT = 0
-        raf = requestAnimationFrame(tick)
-      }
+      active = true
+      wake()
     }
+
     const stop = () => {
+      active = false
       cancelAnimationFrame(raf)
       raf = 0
+      lastT = 0
+    }
+
+    addEventListener('scroll', wake, { passive: true })
+    addEventListener('resize', wake, { passive: true })
+
+    if (canHover) {
+      scene.addEventListener('mousemove', (e) => {
+        hovering = true
+        pointerX = e.clientX
+        pointerY = e.clientY
+        wake()
+      })
+
+      scene.addEventListener('mouseleave', () => {
+        hovering = false
+        targetRx = 0
+        targetRy = 0
+        wake()
+      })
     }
 
     bindAnimationLifecycle(start, stop, scene)
-    computeTarget()
-    current = target
-    card.style.setProperty('--flip', `${current.toFixed(2)}deg`)
-    card.style.setProperty('--flip-z', `${((Math.abs(current) / 180) * -17.1).toFixed(2)}deg`)
+    measure()
+    flip = targetFlip
+    render()
   }
 </script>

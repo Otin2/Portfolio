@@ -114,6 +114,10 @@ const fontFaces = `
           const value = getPath(dict, el.getAttribute('data-i18n-aria'))
           if (typeof value === 'string') el.setAttribute('aria-label', value)
         })
+        document.querySelectorAll('[data-i18n-href]').forEach((el) => {
+          const value = getPath(dict, el.getAttribute('data-i18n-href'))
+          if (typeof value === 'string') el.setAttribute('href', (el.dataset.hrefBase || '') + value)
+        })
         const code = document.getElementById('lang-code')
         if (code) code.textContent = lang.toUpperCase()
       }

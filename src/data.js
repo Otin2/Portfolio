@@ -46,7 +46,7 @@ export const translations = {
         'From idea to launch. Clean, scalable products built to connect and perform in real-world use, driven by clarity, solid architecture, and intentional design.',
       tags: ['Cybersecurity', 'Development', 'Data Management'],
       ctaPrimary: { label: 'Projects', href: '#proyectos' },
-      ctaSecondary: { label: 'Download CV', href: '/cv.pdf' },
+      ctaSecondary: { label: 'Download CV', href: 'cv/Cv_RolandoRoller_EN.pdf' },
     },
 
     about: {
@@ -176,59 +176,80 @@ export const translations = {
       heading: 'Personal projects',
       items: [
         {
-          type: 'ia',
-          label: 'AI',
-          file: 'tennis-classifier.md',
-          image: 'tennis-classifier.svg',
-          title: 'Tennis Player ML Classifier',
-          description:
-            'Machine learning model that classifies the level of amateur tennis players in Lima based on their game statistics.',
-          stack: ['Python', 'scikit-learn', 'Pandas'],
-          link: { label: 'view-repo', href: 'https://github.com/Otin2' },
-        },
-        {
-          type: 'seguridad',
-          label: 'Security',
-          file: 'home-network.md',
-          image: 'home-network.svg',
-          title: 'Home Network Segmentation',
-          description:
-            'Home network redesign separating household and guest devices, a repeater connected over Ethernet, and traffic isolation between segments.',
-          stack: ['Networking', 'VLAN', 'Hardening'],
-          link: { label: 'view-details', href: 'https://github.com/Otin2' },
-        },
-        {
-          type: 'dev',
-          label: 'Dev',
-          file: 'nfc-card.md',
-          image: 'nfc-card.svg',
-          title: 'Digital NFC Card',
-          description:
-            'Digital contact card with a .vcf file hosted on GitHub Pages, compatible with iOS via an NFC tag.',
-          stack: ['GitHub Pages', 'vCard', 'NFC'],
-          link: { label: 'view-repo', href: 'https://github.com/Otin2' },
-        },
-        {
-          type: 'seguridad',
-          label: 'Security',
-          file: 'port-scanner.md',
-          image: 'port-scanner.svg',
-          title: 'Python Port Scanner',
-          description:
-            'Multithreaded TCP port scanner with service banner grabbing and result export, built as a hands-on networking lab.',
-          stack: ['Python', 'Sockets', 'Threading'],
-          link: { label: 'view-repo', href: 'https://github.com/Otin2' },
-        },
-        {
           type: 'dev',
           label: 'Dev',
           file: 'portfolio.md',
-          image: 'portfolio.svg',
-          title: 'Terminal-Style Portfolio',
+          image: 'portfolio.webp',
+          title: 'Personal Portfolio',
           description:
-            'This very site: a bilingual (ES/EN) portfolio with terminal aesthetics, an interactive 3D neural sphere, light/dark themes and a draggable infinite project carousel. Static, dependency-light and built with Astro plus vanilla JS and CSS.',
+            'My personal portfolio, rebuilt from the ground up in Astro with user experience at its core. It brings together interactive pieces like a 3D neural sphere, a flipping holographic card and a draggable project carousel, alongside light/dark themes, bilingual support and performance tuned for mobile.',
           stack: ['Astro', 'Three.js', 'JavaScript', 'CSS'],
           link: { label: 'view-repo', href: 'https://github.com/Otin2' },
+          repo: { label: 'Repository', href: 'https://github.com/Otin2/Portfolio' },
+        },
+        {
+          type: 'seguridad',
+          label: 'Security',
+          file: 'ipv4-toolkit.md',
+          image: 'ipv4-toolkit.webp',
+          title: 'IPv4 Subnetting Toolkit',
+          description:
+            'Python command-line toolkit for IPv4 network design: it generates VLSM subnets from each segment’s host count, converts masks to wildcard and calculates network address, broadcast and usable range, including a ready-to-use OSPF network statement.',
+          stack: ['Python', 'VLSM', 'Subnetting', 'OSPF'],
+          link: { label: 'view-repo', href: 'https://github.com/Otin2' },
+          repo: { label: 'Repository', href: 'https://github.com/Otin2/Toolkit_RedesIPv4' },
+        },
+        {
+          type: 'dev',
+          label: 'Dev',
+          file: 'club-platform.md',
+          image: 'club-platform.webp',
+          title: 'ACENESPAR Club Platform',
+          description:
+            'End-to-end management system built for Club ACENESPAR GC and its 5 locations: an admin web panel for members, payments and reports, a member mobile app with digital QR card, bookings and guest registration, and an NFC/QR reader app for access control at the door, all backed by Supabase with automated monthly billing.',
+          stack: ['React', 'React Native', 'Supabase', 'NFC'],
+        },
+        {
+          type: 'seguridad',
+          label: 'Security',
+          file: 'siaf-migration.md',
+          image: 'siaf-migration.webp',
+          title: 'SIAF Private Cloud Migration',
+          description:
+            'Academic proposal to modernize SIAF, the Peruvian government’s public finance system: a lift-and-shift migration from Visual FoxPro to Java running on a Synology NAS private cloud with Red Hat Linux and Oracle Database, including a hands-on RAID 6 array built with mdadm and Btrfs as the storage proof of concept.',
+          stack: ['Red Hat Linux', 'NAS', 'RAID 6', 'Btrfs'],
+        },
+//         {
+//           type: 'ia',
+//           label: 'AI',
+//           file: 'tennis-classifier.md',
+//           image: 'tennis-classifier.svg',
+//           title: 'Tennis Player ML Classifier',
+//           description:
+//             'Machine learning model that classifies the level of amateur tennis players in Lima based on their game statistics.',
+//           stack: ['Python', 'scikit-learn', 'Pandas'],
+//           link: { label: 'view-repo', href: 'https://github.com/Otin2' },
+//         },
+//         {
+//           type: 'seguridad',
+//           label: 'Security',
+//           file: 'home-network.md',
+//           image: 'home-network.svg',
+//           title: 'Home Network Segmentation',
+//           description:
+//             'Home network redesign separating household and guest devices, a repeater connected over Ethernet, and traffic isolation between segments.',
+//           stack: ['Networking', 'VLAN', 'Hardening'],
+//           link: { label: 'view-details', href: 'https://github.com/Otin2' },
+//         },
+        {
+          type: 'datos',
+          label: 'Data',
+          file: 'oracle-server.md',
+          image: 'oracle-server.webp',
+          title: 'Oracle 19c Database Server',
+          description:
+            'Oracle 19c Enterprise server deployed on a virtual machine: a container database with three pluggable databases, control files and redo logs multiplexed across disks, remote access from SQL Developer over the network, and a bulk load of 15.4 million taxpayer records with SQL*Loader that PL/SQL procedures and a trigger normalize into related tables, tuned with B-tree and bitmap indexes.',
+          stack: ['Oracle 19c', 'PL/SQL', 'SQL*Loader', 'VirtualBox'],
         },
       ],
     },
@@ -291,7 +312,7 @@ export const translations = {
         'Desde la idea al lanzamiento. Productos limpios y escalables, construidos para conectar y rendir en el mundo real, guiados por una arquitectura sólida y diseño intencional.',
       tags: ['Ciberseguridad', 'Desarrollo', 'Gestión de Datos'],
       ctaPrimary: { label: 'Proyectos', href: '#proyectos' },
-      ctaSecondary: { label: 'Descargar CV', href: '/cv.pdf' },
+      ctaSecondary: { label: 'Descargar CV', href: 'cv/Cv_RolandoRoller_ES.pdf' },
     },
 
     about: {
@@ -421,59 +442,80 @@ export const translations = {
       heading: 'Proyectos personales',
       items: [
         {
-          type: 'ia',
-          label: 'IA',
-          file: 'tennis-classifier.md',
-          image: 'tennis-classifier.svg',
-          title: 'Clasificador de Tenistas ML',
-          description:
-            'Modelo de machine learning que clasifica el nivel de jugadores de tenis amateur en Lima a partir de sus estadísticas de juego.',
-          stack: ['Python', 'scikit-learn', 'Pandas'],
-          link: { label: 'ver-repositorio', href: 'https://github.com/Otin2' },
-        },
-        {
-          type: 'seguridad',
-          label: 'Seguridad',
-          file: 'home-network.md',
-          image: 'home-network.svg',
-          title: 'Segmentación de Red Doméstica',
-          description:
-            'Rediseño de una red doméstica con separación de dispositivos del hogar e invitados, repetidor conectado por Ethernet y aislamiento de tráfico entre segmentos.',
-          stack: ['Networking', 'VLAN', 'Hardening'],
-          link: { label: 'ver-detalles', href: 'https://github.com/Otin2' },
-        },
-        {
-          type: 'dev',
-          label: 'Dev',
-          file: 'nfc-card.md',
-          image: 'nfc-card.svg',
-          title: 'Tarjeta NFC Digital',
-          description:
-            'Tarjeta de contacto digital con archivo .vcf alojado en GitHub Pages, compatible con iOS mediante una etiqueta NFC.',
-          stack: ['GitHub Pages', 'vCard', 'NFC'],
-          link: { label: 'ver-repositorio', href: 'https://github.com/Otin2' },
-        },
-        {
-          type: 'seguridad',
-          label: 'Seguridad',
-          file: 'port-scanner.md',
-          image: 'port-scanner.svg',
-          title: 'Escáner de Puertos en Python',
-          description:
-            'Escáner de puertos TCP multihilo con captura de banners de servicios y exportación de resultados, construido como laboratorio práctico de redes.',
-          stack: ['Python', 'Sockets', 'Threading'],
-          link: { label: 'ver-repositorio', href: 'https://github.com/Otin2' },
-        },
-        {
           type: 'dev',
           label: 'Dev',
           file: 'portfolio.md',
-          image: 'portfolio.svg',
-          title: 'Portafolio Estilo Terminal',
+          image: 'portfolio.webp',
+          title: 'Portafolio Personal',
           description:
-            'Este mismo sitio: un portafolio bilingüe (ES/EN) con estética de terminal, una esfera neuronal 3D interactiva, tema claro/oscuro y un carrusel infinito de proyectos arrastrable. Estático, ligero en dependencias y construido con Astro más JS y CSS puros.',
+            'Mi portafolio personal, reconstruido desde cero en Astro y centrado en la experiencia de usuario. Reúne elementos interactivos como una esfera neuronal 3D, una tarjeta holográfica que gira con el scroll y un carrusel de proyectos arrastrable, junto con tema claro/oscuro, soporte bilingüe y un rendimiento optimizado para móvil.',
           stack: ['Astro', 'Three.js', 'JavaScript', 'CSS'],
           link: { label: 'ver-repositorio', href: 'https://github.com/Otin2' },
+          repo: { label: 'Repositorio', href: 'https://github.com/Otin2/Portfolio' },
+        },
+        {
+          type: 'seguridad',
+          label: 'Seguridad',
+          file: 'ipv4-toolkit.md',
+          image: 'ipv4-toolkit.webp',
+          title: 'Toolkit de Subredes IPv4',
+          description:
+            'Herramienta de consola en Python para el diseño de redes IPv4: genera subredes VLSM según los hosts de cada segmento, convierte máscaras a wildcard y calcula dirección de red, broadcast y rango útil, incluyendo la sentencia lista para configurar OSPF.',
+          stack: ['Python', 'VLSM', 'Subnetting', 'OSPF'],
+          link: { label: 'ver-repositorio', href: 'https://github.com/Otin2' },
+          repo: { label: 'Repositorio', href: 'https://github.com/Otin2/Toolkit_RedesIPv4' },
+        },
+        {
+          type: 'dev',
+          label: 'Dev',
+          file: 'club-platform.md',
+          image: 'club-platform.webp',
+          title: 'Plataforma del Club ACENESPAR',
+          description:
+            'Sistema integral de gestión desarrollado para el Club ACENESPAR GC y sus 5 sedes: panel web administrativo para socios, pagos y reportes, app móvil con carné digital QR, reservas y registro de invitados, y una app lectora NFC/QR para el control de acceso en puerta, todo sobre Supabase con cobro mensual automatizado.',
+          stack: ['React', 'React Native', 'Supabase', 'NFC'],
+        },
+        {
+          type: 'seguridad',
+          label: 'Seguridad',
+          file: 'siaf-migration.md',
+          image: 'siaf-migration.webp',
+          title: 'Migración del SIAF a Nube Privada',
+          description:
+            'Propuesta académica para modernizar el SIAF del Ministerio de Economía y Finanzas: migración lift-and-shift de Visual FoxPro a Java sobre una nube privada con NAS Synology, Red Hat Linux y Oracle Database, incluyendo la implementación práctica de un arreglo RAID 6 con mdadm y Btrfs como prueba de concepto de almacenamiento.',
+          stack: ['Red Hat Linux', 'NAS', 'RAID 6', 'Btrfs'],
+        },
+//         {
+//           type: 'ia',
+//           label: 'IA',
+//           file: 'tennis-classifier.md',
+//           image: 'tennis-classifier.svg',
+//           title: 'Clasificador de Tenistas ML',
+//           description:
+//             'Modelo de machine learning que clasifica el nivel de jugadores de tenis amateur en Lima a partir de sus estadísticas de juego.',
+//           stack: ['Python', 'scikit-learn', 'Pandas'],
+//           link: { label: 'ver-repositorio', href: 'https://github.com/Otin2' },
+//         },
+//         {
+//           type: 'seguridad',
+//           label: 'Seguridad',
+//           file: 'home-network.md',
+//           image: 'home-network.svg',
+//           title: 'Segmentación de Red Doméstica',
+//           description:
+//             'Rediseño de una red doméstica con separación de dispositivos del hogar e invitados, repetidor conectado por Ethernet y aislamiento de tráfico entre segmentos.',
+//           stack: ['Networking', 'VLAN', 'Hardening'],
+//           link: { label: 'ver-detalles', href: 'https://github.com/Otin2' },
+//         },
+        {
+          type: 'datos',
+          label: 'Datos',
+          file: 'oracle-server.md',
+          image: 'oracle-server.webp',
+          title: 'Servidor de Base de Datos Oracle 19c',
+          description:
+            'Servidor Oracle 19c Enterprise montado sobre una máquina virtual: base de datos contenedor con tres bases enchufables, archivos de control y redo logs multiplexados entre discos, acceso remoto desde SQL Developer por red, y carga masiva de 15.4 millones de registros de contribuyentes con SQL*Loader que procedimientos PL/SQL y un trigger normalizan en tablas relacionadas, optimizada con índices B-tree y bitmap.',
+          stack: ['Oracle 19c', 'PL/SQL', 'SQL*Loader', 'VirtualBox'],
         },
       ],
     },
